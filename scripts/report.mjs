@@ -7,6 +7,7 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { keyFor, loadTriage } from './triage.mjs';
 
 const SEVERITY_WEIGHT = { critical: 8, high: 5, medium: 3, low: 1 };
 
@@ -92,6 +93,7 @@ export function rankFindings(rawFindings, sessions) {
       const blocked = personas.some((persona) => failedPersonas.has(persona));
       const score = SEVERITY_WEIGHT[finding.severity] * personas.length + (blocked ? 2 : 0);
       return {
+        ...(typeof finding.known === 'string' ? { known: finding.known } : {}),
         title: finding.title,
         severity: finding.severity,
         category: finding.category ?? 'ux',
@@ -154,12 +156,30 @@ export function buildData(runDir, loaded) {
       screenshots: session.screenshots,
       trace: session.trace,
     })),
-    findings: rankFindings(run.findings?.findings ?? fallbackFindings(run.sessions), run.sessions),
+    ...applyTriage(rankFindings(run.findings?.findings ?? fallbackFindings(run.sessions), run.sessions), loadTriage(runDir)),
     coordinated: run.findings !== null,
     cost: estimateCost(run.usage),
     sweep_pages: swept.reduce((sum, session) => sum + (readJson(join(runDir, session.dir, 'a11y.json'), { scans: [] }).scans ?? []).length, 0),
     a11y: bySeverity(run.a11y?.findings),
     ux: bySeverity(run.ux?.findings),
+  };
+}
+
+/** Hides dismissed findings (remembered across runs) and marks confirmed or filed ones. */
+export function applyTriage(ranked, triage) {
+  const visible = [];
+  let dismissed = 0;
+  for (const finding of ranked) {
+    const decision = triage.findings?.[keyFor(finding)];
+    if (decision?.status === 'dismissed') {
+      dismissed += 1;
+      continue;
+    }
+    visible.push({ ...finding, status: decision?.status ?? 'new', ...(decision?.github_issue ? { github_issue: decision.github_issue } : {}) });
+  }
+  return {
+    findings: visible.map((finding, position) => ({ ...finding, rank: position + 1, id: `ISSUE-${position + 1}` })),
+    dismissed,
   };
 }
 
@@ -218,6 +238,7 @@ export function summaryMarkdown(data, reportPath) {
     );
     if (data.findings.length > 10) lines.push('', `${data.findings.length - 10} more in the report.`);
   }
+  if (data.dismissed > 0) lines.push('', `${data.dismissed} previously dismissed finding${data.dismissed === 1 ? ' is' : 's are'} hidden.`);
 
   lines.push(
     '',

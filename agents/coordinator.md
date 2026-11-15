@@ -33,6 +33,10 @@ If a persona abandoned or failed because of a problem, it is at least high. Do n
 
 Category: `ux`, `a11y`, `performance`, `content` or `bug`.
 
+## Known findings
+
+If `.personaqa/triage.json` exists, read it. Each key under `findings` is a problem the team has already confirmed or dismissed, with its `title`. When one of your findings is the same underlying problem, add `"known": "<that key>"` to it. The report hides dismissed problems and marks confirmed ones, so reuse keys only for genuinely the same problem.
+
 ## 3. Write findings.json
 
 Write `<run folder>/findings.json`:

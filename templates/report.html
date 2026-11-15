@@ -131,7 +131,7 @@
 
     for (const finding of shown) {
       const card = el('article', { class: 'card' },
-        el('div', { class: 'row' }, el('span', { class: 'rank', text: `#${finding.rank}` }), badge(finding.severity), el('span', { class: 'chip', text: finding.category }), el('span', { class: 'muted', text: finding.id })),
+        el('div', { class: 'row' }, el('span', { class: 'rank', text: `#${finding.rank}` }), badge(finding.severity), el('span', { class: 'chip', text: finding.category }), el('span', { class: 'muted', text: finding.id }), finding.status !== 'new' ? el('span', { class: 'chip', text: finding.github_issue ? 'filed' : finding.status }) : null),
         el('h3', { text: finding.title }),
         el('p', { text: finding.summary }),
         el('div', { class: 'row' }, el('span', { class: 'muted', text: `Hit by ${finding.personas.length} of ${data.personas.length}:` }), ...finding.personas.map((id) => el('span', { class: 'chip', text: data.personas.find((persona) => persona.id === id)?.name ?? id }))),
