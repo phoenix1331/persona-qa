@@ -1,0 +1,5 @@
+.claude/
+.mcp.json
+test-app/
+node_modules/
+CONTEXT.md

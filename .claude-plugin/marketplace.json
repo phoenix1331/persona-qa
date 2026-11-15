@@ -1,0 +1,18 @@
+{
+  "name": "persona-qa",
+  "owner": {
+    "name": "phoenix1331",
+    "url": "https://github.com/phoenix1331"
+  },
+  "metadata": {
+    "description": "PersonaQA: QA agents that use your app like real people."
+  },
+  "plugins": [
+    {
+      "name": "personaqa",
+      "source": "./",
+      "description": "Persona-driven QA agents that drive a real browser and report journals, issues and regression tests.",
+      "category": "testing"
+    }
+  ]
+}
