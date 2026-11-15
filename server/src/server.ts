@@ -6,6 +6,7 @@ import { PersonaQAError } from './errors.js';
 import { evaluate, limitReached, patienceNotice } from './mission.js';
 import { resolveEnvironment } from './environment.js';
 import { plan } from './plan.js';
+import { formatReport, validateProject } from './validate-project.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
 import { takeSnapshot } from './snapshot.js';
@@ -50,6 +51,17 @@ export function createServer(sessions: SessionManager): McpServer {
         );
         return JSON.stringify(result, null, 2);
       }),
+  );
+
+  server.registerTool(
+    'validate_project',
+    {
+      title: 'Validate PersonaQA files',
+      description:
+        'For the orchestrating session, not personas. Checks .personaqa/config.yaml, every persona (including built-ins and extends) and every mission against the schemas, and lists all problems.',
+      inputSchema: {},
+    },
+    async () => respond(async () => formatReport(validateProject(sessions.loader()))),
   );
 
   server.registerTool(
