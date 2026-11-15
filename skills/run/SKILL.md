@@ -1,7 +1,7 @@
 ---
 description: Runs PersonaQA personas (realistic simulated users) through missions on your app in a real browser and reports what they hit. Use when asked to run personas or the cast, QA a flow "as a user", or e.g. "get James to try checkout".
 argument-hint: "[personas|all] [missions|all] [--set NAME] [--base-url URL]"
-allowed-tools: mcp__plugin_personaqa_browser__plan_run, Agent, Read, Glob
+allowed-tools: mcp__plugin_personaqa_browser__plan_run, Agent, Read, Glob, Write, Bash(node *)
 ---
 
 # PersonaQA run
@@ -42,14 +42,22 @@ base_url: <base_url>
 Call start_session with these values, play the persona through the mission, then finish.
 ```
 
-## 4. Summarise
+## 4. Record usage
 
-When every runner has replied, read each `run.json` under `.personaqa/runs/<run_id>/` (use Glob to find them). Use those files for facts; runner replies and journals are the persona's view, not the record.
+Each Agent result reports the subagent's token usage (for example `total_tokens`). Write `.personaqa/runs/<run_id>/usage.json` as a JSON array with one entry per runner:
 
-Reply with:
+```json
+[{ "persona": "james", "mission": "checkout", "model": "sonnet", "total_tokens": 123456 }]
+```
 
-1. A table: persona, mission, outcome, steps, longest wait, patience breaches.
-2. The main problems the personas hit, merged where the same problem came up more than once, most serious first, each naming who hit it.
-3. The run folder path, and that each session folder holds `journal.md`, screenshots and (per config) a Playwright trace (`npx playwright show-trace <path>/trace.zip`).
+Use the model you passed, or `sonnet` (the runner default). If a result shows no token count, leave that runner out.
 
-Keep it under 300 words. Outcomes come only from `run.json`, never from your own judgement.
+## 5. Coordinate and report
+
+Start one `personaqa:coordinator` subagent with the prompt `Run folder: .personaqa/runs/<run_id>/`. It merges the issues into ranked findings and writes `summary.md` and `report.html`.
+
+Then read `.personaqa/runs/<run_id>/summary.md` and reply with its contents, followed by the path to `report.html` and a note that each session folder holds `journal.md`, screenshots and (per config) a Playwright trace (`npx playwright show-trace <path>/trace.zip`).
+
+If the coordinator fails, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" .personaqa/runs/<run_id>/` yourself (it reports unmerged issues) and say that the findings were not merged.
+
+Outcomes come only from `run.json`, never from your own judgement.
