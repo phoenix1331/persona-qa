@@ -3,3 +3,4 @@
 test-app/
 node_modules/
 CONTEXT.md
+.playwright-mcp/
