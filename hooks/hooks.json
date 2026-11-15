@@ -6,8 +6,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/setup.mjs\"",
-            "timeout": 30
+            "command": "node",
+            "timeout": 30,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/setup.mjs"
+            ]
           }
         ]
       }
@@ -18,8 +21,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/guard-runner.mjs\"",
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/hooks/guard-runner.mjs"
+            ]
           }
         ]
       }
@@ -30,8 +36,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/log-tool.mjs\"",
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/hooks/log-tool.mjs"
+            ]
           }
         ]
       }
@@ -42,8 +51,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/require-finish.mjs\"",
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/hooks/require-finish.mjs"
+            ]
           }
         ]
       }

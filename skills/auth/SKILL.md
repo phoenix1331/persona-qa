@@ -1,7 +1,7 @@
 ---
 description: Saves a signed-in browser login for PersonaQA so personas can test pages behind a login. Use for "/personaqa:auth", "set up login for personas", or when a run says no saved login exists.
 argument-hint: "[account]"
-allowed-tools: Read, Edit, Write, Glob, Agent, mcp__plugin_personaqa_browser__validate_project
+allowed-tools: Read, Glob, Agent, Write(.personaqa/missions/**), Edit(.personaqa/config.yaml), Edit(.gitignore), mcp__plugin_personaqa_browser__validate_project
 ---
 
 # PersonaQA login setup

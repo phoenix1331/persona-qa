@@ -7,6 +7,12 @@
 
 <p align="center"><strong>QA agents that use your app like real people.</strong></p>
 
+<p align="center">
+  <a href="https://github.com/phoenix1331/persona-qa/actions/workflows/ci.yml"><img src="https://github.com/phoenix1331/persona-qa/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-blue" alt="MIT licence"></a>
+  <a href="https://phoenix1331.github.io/persona-qa/"><img src="https://img.shields.io/badge/docs-guide-ff6b00" alt="Documentation"></a>
+</p>
+
 PersonaQA is a Claude Code plugin that gives your app a cast of simulated users. James is 23 and on a phone with patchy 3G; Margaret reads every word on an iPad with large text; Priya never touches a mouse. Give them a mission ("buy one adult ticket for Saturday's match") and each drives a real browser as that person would, then hands back a first-person journal, issues with screenshots and Playwright traces, and a ranked report your team can act on. Confirmed findings become ordinary Playwright regression tests.
 
 **PersonaQA finds the problems. Deterministic tests keep them fixed.**
@@ -72,9 +78,23 @@ In your app's repository:
 /personaqa:run james first-visit
 ```
 
+PersonaQA works in **Claude Code** (terminal, IDE extensions and the desktop app's Code tab) and in **Cowork sessions on your own computer**. It does not run in claude.ai chat, because it needs a local browser.
+
 The first session downloads a headless Chromium (about 290 MB) in the background. Point PersonaQA at staging, preview or local deploys only: personas fill in forms and pay with test cards.
 
 **Documentation:** the [guide](https://phoenix1331.github.io/persona-qa/) walks through [getting started](docs/getting-started.md), writing [missions](docs/missions.md), adding and configuring [personas](docs/personas.md), testing behind a [login](docs/authentication.md), [reading and exporting results](docs/reporting.md), [cost and usage](docs/cost.md), [CI](docs/github-actions.md) and the [configuration reference](docs/configuration.md).
+
+## What PersonaQA runs, downloads and sends
+
+| What | Details |
+|------|---------|
+| **Runs on your machine** | A local MCP server (`server/dist/index.mjs`, built from the TypeScript in `server/src/`) that drives a headless Chromium, and four Node hook scripts in `scripts/`: first-run setup, a log of browser tool calls, a guard that stops persona agents using other tools, and a check that each persona finished |
+| **Downloads on first use** | npm packages pinned in `package-lock.json` (Playwright, axe-core, yaml), installed by Claude Code or by the setup hook, and the Chromium headless shell from Playwright's download servers, into `~/.claude/plugins/data/` |
+| **Opens** | Only your app's hosts listed in `app.allowed_domains`; every other request from the browser is refused |
+| **Writes** | Run output in `.personaqa/runs/`, saved logins in `.personaqa/auth/` (gitignored), and the files you ask the skills to create in `.personaqa/` |
+| **Sends** | Nothing to PersonaQA, which has no servers. Page text and screenshots go to Claude as part of your normal Claude Code usage. GitHub issues are created only when you run `/personaqa:report file`, with your own `gh` login, after you confirm |
+
+See [Privacy](docs/privacy.md).
 
 ## Commands
 

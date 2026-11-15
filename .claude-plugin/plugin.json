@@ -8,6 +8,9 @@
   },
   "homepage": "https://github.com/phoenix1331/persona-qa",
   "repository": "https://github.com/phoenix1331/persona-qa",
+  "documentationUrl": "https://github.com/phoenix1331/persona-qa/tree/main/docs",
+  "supportUrl": "https://github.com/phoenix1331/persona-qa/issues",
+  "privacyPolicyUrl": "https://github.com/phoenix1331/persona-qa/blob/main/docs/privacy.md",
   "license": "MIT",
   "keywords": [
     "qa",
@@ -17,18 +20,13 @@
     "personas",
     "e2e-testing"
   ],
+  "icon": "./.claude-plugin/icon.png",
   "mcpServers": {
     "browser": {
       "command": "node",
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/server/dist/index.mjs"
-      ],
-      "env": {
-        "PERSONAQA_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}",
-        "PERSONAQA_DATA": "${CLAUDE_PLUGIN_DATA}",
-        "PERSONAQA_PROJECT_DIR": "${CLAUDE_PROJECT_DIR}",
-        "PLAYWRIGHT_BROWSERS_PATH": "${CLAUDE_PLUGIN_DATA}/browsers"
-      }
+      ]
     }
   }
 }

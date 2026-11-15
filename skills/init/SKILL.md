@@ -1,7 +1,7 @@
 ---
-description: Sets up PersonaQA in the current repository: creates .personaqa/ with config, a starter mission and a personas folder, and gitignores run output. Use when PersonaQA is not set up yet or the user asks to initialise it.
+description: "Sets up PersonaQA in the current repository: creates .personaqa/ with config, a starter mission and a personas folder, and gitignores run output. Use when PersonaQA is not set up yet or the user asks to initialise it."
 argument-hint: "[base-url]"
-allowed-tools: Read, Write, Edit, Glob, AskUserQuestion, mcp__plugin_personaqa_browser__validate_project
+allowed-tools: Read, Glob, AskUserQuestion, Write(.personaqa/**), Write(.gitignore), Edit(.gitignore), mcp__plugin_personaqa_browser__validate_project
 ---
 
 # PersonaQA init

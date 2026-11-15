@@ -1,7 +1,7 @@
 ---
 description: Runs PersonaQA personas (realistic simulated users) through missions on your app in a real browser and reports what they hit. Use when asked to run personas or the cast, QA a flow "as a user", or e.g. "get James to try checkout".
 argument-hint: "[personas|all] [missions|all] [--set NAME] [--base-url URL] [--with a11y|ux] [--no-inspectors]"
-allowed-tools: mcp__plugin_personaqa_browser__plan_run, Agent, Read, Glob, Write, Bash(node *)
+allowed-tools: mcp__plugin_personaqa_browser__plan_run, Agent, Read, Glob, Write(.personaqa/runs/**), Bash(node */scripts/report.mjs *)
 ---
 
 # PersonaQA run

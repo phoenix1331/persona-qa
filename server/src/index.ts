@@ -3,12 +3,15 @@ import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { Loader } from './loader.js';
 import { createServer } from './server.js';
+import { useInstalledBrowser } from './playwright.js';
 import { SessionManager } from './sessions.js';
 
 export { serverInfo } from './server-info.js';
 
 const pluginRoot =
-  process.env['PERSONAQA_PLUGIN_ROOT'] ?? join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+  process.env['PERSONAQA_PLUGIN_ROOT'] ??
+  process.env['CLAUDE_PLUGIN_ROOT'] ??
+  join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const projectDir =
   process.env['PERSONAQA_PROJECT_DIR'] ?? process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
 
@@ -18,6 +21,7 @@ const sessions = new SessionManager({
   headless: process.env['PERSONAQA_HEADED'] !== '1',
 });
 
+useInstalledBrowser();
 const server = createServer(sessions);
 
 async function shutdown(): Promise<void> {

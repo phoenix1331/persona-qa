@@ -12,7 +12,7 @@ import {
 } from './environment.js';
 import { PersonaQAError } from './errors.js';
 import { type FiredEvent, type PlannedEvent, planEvents } from './events.js';
-import { playwright, setupMessage } from './playwright.js';
+import { playwright, pluginDataDir, setupMessage } from './playwright.js';
 import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
 import type { Config, Mission, Persona } from './types.js';
@@ -271,9 +271,7 @@ export class SessionManager {
         if (error instanceof PersonaQAError) throw error;
         const message = (error as Error).message;
         if (/Executable doesn't exist|browserType\.launch/.test(message)) {
-          throw new PersonaQAError(
-            setupMessage(process.env['PERSONAQA_DATA'], 'Chromium is not installed yet.'),
-          );
+          throw new PersonaQAError(setupMessage(pluginDataDir(), 'Chromium is not installed yet.'));
         }
         throw error;
       }

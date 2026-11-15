@@ -9,8 +9,22 @@ type Playwright = typeof PlaywrightModule;
 
 let cached: Playwright | undefined;
 
+/** The plugin's persistent data folder. Claude Code sets CLAUDE_PLUGIN_DATA for plugin MCP servers. */
+export function pluginDataDir(): string | undefined {
+  const value = process.env['PERSONAQA_DATA'] ?? process.env['CLAUDE_PLUGIN_DATA'];
+  return value === undefined || value === '' ? undefined : value;
+}
+
+/** Points Playwright at the browser the setup hook downloaded, unless something else already chose one. */
+export function useInstalledBrowser(): void {
+  const dataDir = pluginDataDir();
+  if (process.env['PLAYWRIGHT_BROWSERS_PATH'] === undefined && dataDir !== undefined) {
+    process.env['PLAYWRIGHT_BROWSERS_PATH'] = join(dataDir, 'browsers');
+  }
+}
+
 function origins(): string[] {
-  const dataDir = process.env['PERSONAQA_DATA'];
+  const dataDir = pluginDataDir();
   const list = [import.meta.url];
   if (dataDir !== undefined && dataDir !== '') {
     list.push(pathToFileURL(join(dataDir, 'node_modules', 'personaqa.js')).href);
@@ -32,9 +46,7 @@ export function runtimeResolve(specifier: string): string {
   }
 
   const name = specifier.split('/')[0] ?? specifier;
-  throw new PersonaQAError(
-    setupMessage(process.env['PERSONAQA_DATA'], `${name} is not installed yet.`),
-  );
+  throw new PersonaQAError(setupMessage(pluginDataDir(), `${name} is not installed yet.`));
 }
 
 /** Loads Playwright through `runtimeResolve`. */

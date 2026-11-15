@@ -1,7 +1,7 @@
 ---
 description: Opens or rebuilds a PersonaQA run report, records confirm or dismiss decisions on findings (remembered across runs), and files confirmed findings as GitHub issues. Use for "/personaqa:report", "dismiss ISSUE-3", "file the findings to GitHub".
 argument-hint: "[run-id] | open | export | confirm ISSUE-n... | dismiss ISSUE-n \"reason\" | file [ISSUE-n...] [--yes]"
-allowed-tools: Read, Glob, AskUserQuestion, Bash(node *), Bash(gh issue *), Bash(gh label *), Bash(open *), Bash(xdg-open *), Bash(wslview *), Bash(explorer.exe *), Bash(cmd.exe /c start *)
+allowed-tools: Read, Glob, AskUserQuestion, Bash(node */scripts/report.mjs *), Bash(node */scripts/triage.mjs *), Bash(gh issue list *), Bash(gh issue create *), Bash(gh label create *), Bash(open *), Bash(xdg-open *), Bash(wslview *), Bash(explorer.exe *), Bash(cmd.exe /c start *)
 ---
 
 # PersonaQA report

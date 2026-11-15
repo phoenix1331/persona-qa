@@ -1,7 +1,7 @@
 ---
-description: Runs a quick accessibility sweep of your app's mission pages with no personas: automated axe-core WCAG scans plus the accessibility inspector's review. Use for "audit accessibility", "check WCAG", or a fast pre-release a11y check.
+description: "Runs a quick accessibility sweep of your app's mission pages with no personas: automated axe-core WCAG scans plus the accessibility inspector's review. Use for \"audit accessibility\", \"check WCAG\", or a fast pre-release a11y check."
 argument-hint: "[missions|all] [--base-url URL] [--max-pages N]"
-allowed-tools: mcp__plugin_personaqa_browser__sweep, Agent, Read, Bash(node *)
+allowed-tools: mcp__plugin_personaqa_browser__sweep, Agent, Read, Bash(node */scripts/report.mjs *)
 ---
 
 # PersonaQA accessibility sweep
