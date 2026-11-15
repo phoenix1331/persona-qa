@@ -8,6 +8,7 @@ import { resolveEnvironment } from './environment.js';
 import { plan } from './plan.js';
 import { beforeAction } from './events.js';
 import { auditState, formatScan, rideAlong } from './audit.js';
+import { sweep } from './sweep.js';
 import { recordIssue } from './issues.js';
 import { formatReport, validateProject } from './validate-project.js';
 import { serverInfo } from './server-info.js';
@@ -71,6 +72,45 @@ export function createServer(sessions: SessionManager): McpServer {
           throw new PersonaQAError(`Session ${id} is closed.`);
         }
         return formatScan(await auditState(session, true));
+      }),
+  );
+
+  server.registerTool(
+    'sweep',
+    {
+      title: 'Accessibility sweep',
+      description:
+        'For the orchestrating session, not personas. Scans each mission start page and the same-site pages it links to (one per path) with axe-core, with no persona, and writes a run folder for the a11y inspector.',
+      inputSchema: {
+        missions: z
+          .string()
+          .optional()
+          .describe('"all" or comma-separated mission ids; omit for all'),
+        base_url: z.string().optional(),
+        max_pages: z
+          .number()
+          .int()
+          .min(1)
+          .max(50)
+          .optional()
+          .describe('Pages per mission, default 15'),
+      },
+    },
+    async ({ missions, base_url, max_pages }) =>
+      respond(async () => {
+        const ids =
+          missions === undefined || missions.trim() === '' || missions.trim() === 'all'
+            ? undefined
+            : missions
+                .split(',')
+                .map((id) => id.trim())
+                .filter((id) => id !== '');
+        const result = await sweep(sessions, {
+          ...(ids === undefined ? {} : { missions: ids }),
+          ...(base_url === undefined ? {} : { base_url }),
+          ...(max_pages === undefined ? {} : { max_pages }),
+        });
+        return JSON.stringify(result, null, 2);
       }),
   );
 

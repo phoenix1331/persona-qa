@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "QA agents that use your app like real people: persona-driven browser runs that produce journals, evidence-backed issues and Playwright regression tests.",
   "author": {
-    "name": "phoenix1331",
+    "name": "Darren Williams",
     "url": "https://github.com/phoenix1331"
   },
   "homepage": "https://github.com/phoenix1331/persona-qa",

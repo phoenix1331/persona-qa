@@ -76,9 +76,21 @@ export class SessionManager {
 
   async start(personaId: string, missionId: string, options: StartOptions = {}): Promise<Session> {
     const loader = this.options.loader();
-    const config = loader.config();
-    const persona = loader.persona(personaId);
-    const mission = loader.mission(missionId);
+    return this.startWith(
+      loader.config(),
+      loader.persona(personaId),
+      loader.mission(missionId),
+      options,
+    );
+  }
+
+  /** Starts a session from already loaded objects, e.g. the neutral persona an accessibility sweep uses. */
+  async startWith(
+    config: Config,
+    persona: Persona,
+    mission: Mission,
+    options: StartOptions = {},
+  ): Promise<Session> {
     const baseUrl = options.baseUrl ?? config.app.base_url;
     const allowed = this.allowedDomains(config, baseUrl, options.baseUrl !== undefined);
     const startUrl = new URL(mission.start_url, baseUrl).toString();

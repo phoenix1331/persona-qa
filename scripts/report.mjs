@@ -130,7 +130,9 @@ export function estimateCost(usage) {
   return { tokens: total, low: priced ? low : null, high: priced ? high : null, label };
 }
 
-export function buildData(runDir, run) {
+export function buildData(runDir, loaded) {
+  const swept = loaded.sessions.filter((session) => session.facts.persona === 'sweep');
+  const run = { ...loaded, sessions: loaded.sessions.filter((session) => session.facts.persona !== 'sweep') };
   const first = run.sessions[0]?.facts ?? {};
   const personas = [...new Map(run.sessions.map((session) => [session.facts.persona, session])).values()].map((session) => ({
     id: session.facts.persona,
@@ -155,6 +157,7 @@ export function buildData(runDir, run) {
     findings: rankFindings(run.findings?.findings ?? fallbackFindings(run.sessions), run.sessions),
     coordinated: run.findings !== null,
     cost: estimateCost(run.usage),
+    sweep_pages: swept.reduce((sum, session) => sum + (readJson(join(runDir, session.dir, 'a11y.json'), { scans: [] }).scans ?? []).length, 0),
     a11y: bySeverity(run.a11y?.findings),
     ux: bySeverity(run.ux?.findings),
   };
@@ -184,13 +187,18 @@ export function summaryMarkdown(data, reportPath) {
   const lines = [
     `## PersonaQA: ${data.app}`,
     '',
-    `${data.sessions.length} session${data.sessions.length === 1 ? '' : 's'}: ${outcome('success')} reached the goal, ${outcome('abandoned')} gave up, ${outcome('limit')} hit a limit, ${outcome('incomplete')} unfinished.`,
-    '',
-    '| Persona | Mission | Outcome | Steps | Longest wait |',
-    '|---|---|---|---|---|',
-    ...data.sessions.map((session) => `| ${session.persona_name} | ${session.mission} | ${session.outcome} | ${session.steps} | ${session.longest_wait_seconds}s |`),
-    '',
   ];
+  if (data.sessions.length > 0) {
+    lines.push(
+      `${data.sessions.length} session${data.sessions.length === 1 ? '' : 's'}: ${outcome('success')} reached the goal, ${outcome('abandoned')} gave up, ${outcome('limit')} hit a limit, ${outcome('incomplete')} unfinished.`,
+      '',
+      '| Persona | Mission | Outcome | Steps | Longest wait |',
+      '|---|---|---|---|---|',
+      ...data.sessions.map((session) => `| ${session.persona_name} | ${session.mission} | ${session.outcome} | ${session.steps} | ${session.longest_wait_seconds}s |`),
+      '',
+    );
+  }
+  if (data.sweep_pages > 0) lines.push(`Accessibility sweep: ${data.sweep_pages} page state${data.sweep_pages === 1 ? '' : 's'} scanned with no persona.`, '');
 
   for (const [label, list] of [['Accessibility', data.a11y], ['UX', data.ux]]) {
     if (list === null) continue;
