@@ -1,0 +1,11 @@
+{
+  "name": "persona-qa",
+  "private": true,
+  "license": "MIT",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}

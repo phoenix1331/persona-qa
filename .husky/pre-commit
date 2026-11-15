@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+
+# Plugin manifest, marketplace and component paths
+if ! command -v claude > /dev/null 2>&1; then
+  echo "error: claude CLI not found. install Claude Code to validate the plugin."
+  exit 1
+fi
+
+echo "validating plugin..."
+if ! claude plugin validate --strict . > /dev/null; then
+  claude plugin validate --strict .
+  echo "error: plugin validation failed."
+  exit 1
+fi
+
+# Server lint and formatting
+if [ ! -d server/node_modules ]; then
+  echo "error: server dependencies missing. run npm --prefix server install."
+  exit 1
+fi
+
+echo "checking server types, lint and formatting..."
+if ! npm --prefix server run --silent typecheck; then
+  echo "error: tsc found type errors."
+  exit 1
+fi
+
+if ! npm --prefix server run --silent lint; then
+  echo "error: eslint found issues. run npm --prefix server run lint -- --fix."
+  exit 1
+fi
+
+if ! npm --prefix server run --silent format:check; then
+  echo "error: prettier found formatting issues. run npm --prefix server run format."
+  exit 1
+fi
+
+# Security audit via osv-scanner CLI
+if ! command -v osv-scanner > /dev/null 2>&1; then
+  echo "error: osv-scanner not found. install it: https://github.com/google/osv-scanner"
+  exit 1
+fi
+
+echo "running osv-scanner audit..."
+if ! osv-scanner --lockfile=package-lock.json --lockfile=server/package-lock.json; then
+  echo "error: vulnerable packages detected. review the osv-scanner output above."
+  exit 1
+fi
