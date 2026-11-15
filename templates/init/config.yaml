@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/phoenix1331/persona-qa/main/schema/config.schema.json
+version: 1
+
+app:
+  name: {{APP_NAME}}
+  base_url: {{BASE_URL}}
+  allowed_domains:            # the browser refuses anything else; add payment or auth hosts you use
+    - {{HOST}}
+
+auth:
+  strategy: none              # none | storage_state | login_mission
+
+runner:
+  max_parallel: 3
+  max_steps_per_run: 60
+  max_minutes_per_run: 8
+
+personas:
+  enabled: [{{PERSONAS}}]
+  paths: [.personaqa/personas]
+
+output:
+  dir: .personaqa/runs
+  screenshots: on_issue       # every_action | on_issue | off
+  trace: on_failure           # always | on_failure | off
+  regression_tests: suggest   # off | suggest | write
+
+issues:
+  sink: file                  # file | github
+  github:
+    labels: [personaqa]
+    min_severity: medium
+
+ci:
+  pull_request:
+    personas: [{{FIRST_PERSONA}}]
+    missions: [first-visit]
+  nightly:
+    personas: all
+    missions: all
+
+inspectors:
+  a11y:
+    enabled: true
+    standard: wcag22
+    level: AA
+    mode: ride_along          # ride_along | sweep | both
+  ux:
+    enabled: true

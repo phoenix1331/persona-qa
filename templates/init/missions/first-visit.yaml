@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/phoenix1331/persona-qa/main/schema/mission.schema.json
+# A starter mission. Rewrite the goal and success rule for your app's most important journey.
+id: first-visit
+goal: Find out what this site offers and get to the main thing it wants you to do.
+start_url: /
+time_limit_minutes: 3
+success:
+  any:
+    - url_contains: {{SUCCESS_PATH}}
+context: >
+  The persona has never used this site before.
