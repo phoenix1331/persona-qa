@@ -1,10 +1,12 @@
 import { randomBytes } from 'node:crypto';
 import { type Browser, type BrowserContext, type Page, chromium } from 'playwright';
+import { Activity } from './activity.js';
 import { isAllowedUrl } from './domain-guard.js';
 import { PersonaQAError } from './errors.js';
 import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
 import type { Config, Mission, Persona } from './types.js';
+import { seededRandom } from './typos.js';
 
 export type Outcome = 'success' | 'abandoned' | 'limit' | 'incomplete';
 
@@ -26,6 +28,10 @@ export interface Session {
   notices: string[];
   blockedRequests: string[];
   snapshot: SnapshotState;
+  activity: Activity;
+  touch: boolean;
+  random: () => number;
+  lastActionMs: number;
 }
 
 export interface StartOptions {
@@ -62,8 +68,9 @@ export class SessionManager {
     const context = await browser.newContext();
     const page = await context.newPage();
 
+    const id = `${persona.id}--${mission.id}--${randomBytes(2).toString('hex')}`;
     const session: Session = {
-      id: `${persona.id}--${mission.id}--${randomBytes(2).toString('hex')}`,
+      id,
       persona,
       mission,
       config: { ...config, app: { ...config.app, allowed_domains: allowed } },
@@ -76,6 +83,10 @@ export class SessionManager {
       notices: [],
       blockedRequests: [],
       snapshot: { nextRef: 1 },
+      activity: new Activity(page),
+      touch: false,
+      random: seededRandom(id),
+      lastActionMs: 0,
     };
 
     await this.guard(session);

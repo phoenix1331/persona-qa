@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
+import { type ActionResult, KEYS, back, pressKey, scroll, tap, type } from './actions.js';
 import { PersonaQAError } from './errors.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
@@ -51,6 +52,83 @@ export function createServer(sessions: SessionManager): McpServer {
         const session = sessions.active(id);
         return view(session, screenshot === true);
       }),
+  );
+
+  const act = (id: string, action: (session: Session) => Promise<ActionResult>) =>
+    respond(async () => {
+      const session = sessions.active(id);
+      const result = await action(session);
+      session.steps += 1;
+      session.lastActionMs = result.durationMs;
+
+      const seconds = result.durationMs / 1000;
+      const waited = seconds >= 1 ? ` The page took ${seconds.toFixed(1)}s to respond.` : '';
+      const screen = await view(session, false);
+      return { text: `${result.summary}${waited}\n\n${screen.text}` };
+    });
+
+  server.registerTool(
+    'tap',
+    {
+      title: 'Tap',
+      description:
+        'Taps (or clicks) the spot where a control is on screen. If something covers it, whatever is on top gets the tap. Returns the screen afterwards.',
+      inputSchema: { session: z.string(), ref: z.string().describe('Ref from look, e.g. e12') },
+    },
+    async ({ session, ref }) => act(session, (current) => tap(current, ref)),
+  );
+
+  server.registerTool(
+    'type',
+    {
+      title: 'Type',
+      description:
+        'Taps a field if it is not focused, replaces its contents and types the text. You may make typos as you would in real life; the result says what was actually typed.',
+      inputSchema: {
+        session: z.string(),
+        ref: z.string(),
+        text: z.string(),
+        submit: z.boolean().optional().describe('Press Enter afterwards'),
+      },
+    },
+    async ({ session, ref, text, submit }) =>
+      act(session, (current) => type(current, ref, text, submit === true)),
+  );
+
+  server.registerTool(
+    'press',
+    {
+      title: 'Press a key',
+      description:
+        'Presses a keyboard key, e.g. Tab to move focus, Enter to activate, Escape to close.',
+      inputSchema: { session: z.string(), key: z.enum(KEYS) },
+    },
+    async ({ session, key }) => act(session, (current) => pressKey(current, key)),
+  );
+
+  server.registerTool(
+    'scroll',
+    {
+      title: 'Scroll',
+      description: 'Scrolls the page up or down by a screen (default) or half a screen.',
+      inputSchema: {
+        session: z.string(),
+        direction: z.enum(['up', 'down']),
+        amount: z.enum(['screen', 'half']).optional(),
+      },
+    },
+    async ({ session, direction, amount }) =>
+      act(session, (current) => scroll(current, direction, amount ?? 'screen')),
+  );
+
+  server.registerTool(
+    'back',
+    {
+      title: 'Back',
+      description: "Presses the browser's back button.",
+      inputSchema: { session: z.string() },
+    },
+    async ({ session }) => act(session, (current) => back(current)),
   );
 
   server.registerTool(

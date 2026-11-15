@@ -17,7 +17,7 @@ export interface Snapshot {
 const DIFF_RATIO = 0.6;
 
 export async function takeSnapshot(page: Page, state: SnapshotState): Promise<Snapshot> {
-  const output: ScriptOutput = await page.evaluate(collectSnapshot, { nextRef: state.nextRef });
+  const output = await collect(page, state.nextRef);
   state.nextRef = output.nextRef;
 
   const onScreen = output.lines.filter((line) => line.visible).map((line) => line.text);
@@ -44,6 +44,20 @@ export async function takeSnapshot(page: Page, state: SnapshotState): Promise<Sn
   }
 
   return finish([header, ...(onScreen.length > 0 ? onScreen : ['(The screen is blank.)']), footer]);
+}
+
+/** A navigation can replace the document mid-read; wait for the new one and try again. */
+async function collect(page: Page, nextRef: number, attempts = 3): Promise<ScriptOutput> {
+  try {
+    return await page.evaluate(collectSnapshot, { nextRef });
+  } catch (error) {
+    const navigating = /Execution context was destroyed|navigation/i.test((error as Error).message);
+    if (!navigating || attempts <= 1) {
+      throw error;
+    }
+    await page.waitForLoadState('load', { timeout: 30_000 }).catch(() => undefined);
+    return collect(page, nextRef, attempts - 1);
+  }
 }
 
 function finish(parts: string[], diffed = false): Snapshot {
