@@ -61,6 +61,7 @@ Inspectors are on when `inspectors` in the plan says so, narrowed by `--with` (o
 | Inspector | Agent | Writes |
 |-----------|-------|--------|
 | a11y | `personaqa:a11y-inspector` | `a11y.json` (Accessibility tab) |
+| ux | `personaqa:ux-inspector` | `ux.json` (UX tab) |
 
 Wait for them before the coordinator.
 
