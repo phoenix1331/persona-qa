@@ -41,3 +41,30 @@ The persona prompt alone produced a believable, useful journal. The problems are
 - A persona prompt with fixed trait values produces consistent, in-character behaviour and a readable journal.
 - Clicking by snapshot reference respects real hit-testing, so overlays such as the cookie banner block taps as they would for a person.
 - Prompt caching keeps a long run cheap: most input was cache reads.
+
+## After: the same run on the PersonaQA browser server
+
+James was run again through the same mission from a plain `claude -p` session with only the PersonaQA server attached (no plugin yet, no file tools), using the planted-flaw app and the persona file above.
+
+| Measure | Stock Playwright MCP | PersonaQA server |
+|---------|----------------------|------------------|
+| Environment | 390x844 viewport only | iPhone 15, touch, slow 3G (2s latency), en-GB, Europe/London |
+| Outcome | "Success", claimed by the agent | Abandoned (`incomplete`), decided by the server |
+| Turns / wall time | 18 / 49s | 18 / 86s |
+| Cost | $0.24 | $0.14 |
+| Tokens | 41.7K cache write, 431.6K cache read | 21.2K cache write, 293.4K cache read |
+| Seat map snapshot | 45.6K characters | about 2K characters per screen |
+| Address bar shortcut | Used (`/checkout?seat=242`) | Not possible |
+| Slowness | Seen only as a tool timeout | Three "you waited 8.5s, longer than your 8s" notices |
+| Evidence | Final message only | `journal.md`, `run.json`, `actions.log`, 13 screenshots, `trace.zip` |
+
+### What happened
+
+James never reached checkout. On a phone over slow 3G, every seat map load took about 8.5s, past his 8s patience. Each of his three seat choices bounced back to the fixtures list with "Sorry, that seat is no longer available". The Playwright trace shows the three requests went to seats that were genuinely sold: sold seats in this app differ only by a slightly duller green (planted flaw F15), their accessible names are identical to free seats, and they still link to checkout. Without asking for a screenshot, a text-only persona has no way to tell them apart. With throttling and patience enforced, that flaw plus the slow seat map (F03) was enough to lose the sale.
+
+### Lessons for the runner agent
+
+- **Prompt for screenshots on visual choices.** James never asked for one. The `persona-runner` instructions should tell personas to look at a screenshot when choosing from a visual layout (seat maps, colour-coded states), because that is what a sighted person would use.
+- **Trust the trace over the journal.** James's journal says he tried "North C4"; the trace shows C3. Journals are the persona's memory, not a record. Reports should cite `actions.log` and the trace for facts and the journal for experience.
+- **Patience notices work.** The persona reacted to them in character ("wasn't wasting any more data") without the server forcing an exit.
+- **Cost went down even though the run was harder**, because the snapshots are smaller and diffs replace repeated full pages.
