@@ -20,6 +20,8 @@ export interface Plan {
   pairs: { persona: string; mission: string }[];
   personas: { id: string; name: string; environment: string }[];
   missions: { id: string; goal: string }[];
+  /** Inspectors switched on in config; the run skill narrows these with --with or --no-inspectors. */
+  inspectors: { a11y: boolean; ux: boolean };
 }
 
 function parse(value: string | undefined): Selection | undefined {
@@ -75,5 +77,6 @@ export function plan(
     pairs: personaIds.flatMap((persona) => missionIds.map((mission) => ({ persona, mission }))),
     personas,
     missions,
+    inspectors: { a11y: config.inspectors.a11y.enabled, ux: config.inspectors.ux.enabled },
   };
 }

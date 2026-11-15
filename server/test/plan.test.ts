@@ -39,6 +39,7 @@ describe('plan_run', () => {
     expect(plan).toMatchObject({
       base_url: 'http://127.0.0.1:8000',
       max_parallel: 2,
+      inspectors: { a11y: true, ux: true },
       pairs: [
         { persona: 'james', mission: 'checkout' },
         { persona: 'james', mission: 'signup' },

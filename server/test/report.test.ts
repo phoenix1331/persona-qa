@@ -179,3 +179,32 @@ describe('report.mjs', () => {
     expect(data.findings[0]?.['evidence']).toEqual([]);
   });
 });
+
+describe('inspector tabs', () => {
+  it('sorts inspector findings by severity and mentions them in the summary', () => {
+    const runDir = fixture(sessions, {
+      'a11y.json': {
+        findings: [
+          { severity: 'low', title: 'Minor', detail: 'x', tags: [] },
+          {
+            severity: 'high',
+            title: 'Focus trap',
+            detail: 'y',
+            tags: ['WCAG 2.1.2'],
+            personas: ['priya'],
+          },
+          { severity: 'bogus', title: 'Dropped', detail: 'z' },
+        ],
+      },
+    });
+
+    const { data, summary } = render(runDir);
+
+    expect((data['a11y'] as { title: string }[]).map((finding) => finding.title)).toEqual([
+      'Focus trap',
+      'Minor',
+    ]);
+    expect(data['ux']).toBeNull();
+    expect(summary).toContain('Accessibility inspector: 2 findings, 1 high or critical.');
+  });
+});

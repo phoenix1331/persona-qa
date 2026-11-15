@@ -1,6 +1,6 @@
 ---
 description: Runs PersonaQA personas (realistic simulated users) through missions on your app in a real browser and reports what they hit. Use when asked to run personas or the cast, QA a flow "as a user", or e.g. "get James to try checkout".
-argument-hint: "[personas|all] [missions|all] [--set NAME] [--base-url URL]"
+argument-hint: "[personas|all] [missions|all] [--set NAME] [--base-url URL] [--with a11y|ux] [--no-inspectors]"
 allowed-tools: mcp__plugin_personaqa_browser__plan_run, Agent, Read, Glob, Write, Bash(node *)
 ---
 
@@ -19,6 +19,8 @@ Arguments: `$ARGUMENTS`
 | `james,priya checkout` | Comma-separated lists; `all` means every persona or mission |
 | `--set pull_request` | A named run set from `ci` in the config |
 | `--base-url https://pr-12.example.test` | Run against another deploy of the same app |
+| `--with a11y` | Only this inspector rides along (`a11y` or `ux`; repeatable) |
+| `--no-inspectors` | Personas only, no inspectors |
 
 Plain English maps to the same fields: "James and Margaret on checkout" is `james,margaret checkout`. The first bare word is personas, the second missions.
 
@@ -52,7 +54,17 @@ Each Agent result reports the subagent's token usage (for example `total_tokens`
 
 Use the model you passed, or `sonnet` (the runner default). If a result shows no token count, leave that runner out.
 
-## 5. Coordinate and report
+## 5. Inspectors
+
+Inspectors are on when `inspectors` in the plan says so, narrowed by `--with` (only the named ones) or `--no-inspectors` (none). Start the ones that are on in parallel, in one message, each with the prompt `Run folder: .personaqa/runs/<run_id>/`:
+
+| Inspector | Agent | Writes |
+|-----------|-------|--------|
+| a11y | `personaqa:a11y-inspector` | `a11y.json` (Accessibility tab) |
+
+Wait for them before the coordinator.
+
+## 6. Coordinate and report
 
 Start one `personaqa:coordinator` subagent with the prompt `Run folder: .personaqa/runs/<run_id>/`. It merges the issues into ranked findings and writes `summary.md` and `report.html`.
 

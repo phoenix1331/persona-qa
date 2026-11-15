@@ -60,6 +60,18 @@ async function collect(page: Page, nextRef: number, attempts = 3): Promise<Scrip
   }
 }
 
+/** The whole page as lines, on screen or not, for inspectors. Shares the session's ref counter so refs stay unique. */
+export async function pageOutline(
+  page: Page,
+  state: SnapshotState,
+  maxChars = 6000,
+): Promise<string> {
+  const output = await collect(page, state.nextRef);
+  state.nextRef = output.nextRef;
+  const text = output.lines.map((line) => line.text).join('\n');
+  return text.length > maxChars ? `${text.slice(0, maxChars - 1)}…` : text;
+}
+
 function finish(parts: string[], diffed = false): Snapshot {
   const text = parts.filter((part) => part !== '').join('\n');
   return { text, tokens: Math.ceil(text.length / 4), diffed };

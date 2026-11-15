@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { Page } from 'playwright';
 import { runtimeResolve } from './playwright.js';
 import type { Session } from './sessions.js';
+import { pageOutline } from './snapshot.js';
 import type { Config } from './types.js';
 
 export interface A11yNode {
@@ -26,6 +27,8 @@ export interface A11yScan {
   url: string;
   state: string;
   screenshot?: string;
+  /** Text outline of the whole page for manual-style review. */
+  outline: string;
   violations: A11yViolation[];
 }
 
@@ -157,10 +160,12 @@ export async function auditState(session: Session, force: boolean): Promise<A11y
     violations.length > 0
       ? await session.writer.screenshot(session, `a11y-${session.a11yScans.length + 1}`)
       : undefined;
+  const outline = await pageOutline(session.page, session.snapshot).catch(() => '');
   const result: A11yScan = {
     step: session.steps,
     url: session.page.url(),
     state,
+    outline,
     ...(screenshot === undefined ? {} : { screenshot }),
     violations,
   };

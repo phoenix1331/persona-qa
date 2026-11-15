@@ -128,3 +128,13 @@ describe('WCAG helpers', () => {
     expect(tagsFor('wcag21', 'A')).toEqual(['wcag2a', 'wcag21a']);
   });
 });
+
+describe('page outline for inspectors', () => {
+  it('stores the whole page as text with each scan', async () => {
+    const { session } = await open();
+
+    expect(session().a11yScans[0]?.outline).toMatch(
+      /# Tickets[\s\S]*\[image with no description\][\s\S]*\[e\d+ textbox \(no name\)\]/,
+    );
+  });
+});

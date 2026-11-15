@@ -155,9 +155,16 @@ export function buildData(runDir, run) {
     findings: rankFindings(run.findings?.findings ?? fallbackFindings(run.sessions), run.sessions),
     coordinated: run.findings !== null,
     cost: estimateCost(run.usage),
-    a11y: run.a11y?.findings ?? null,
-    ux: run.ux?.findings ?? null,
+    a11y: bySeverity(run.a11y?.findings),
+    ux: bySeverity(run.ux?.findings),
   };
+}
+
+function bySeverity(findings) {
+  if (!Array.isArray(findings)) return null;
+  return findings
+    .filter((finding) => SEVERITY_WEIGHT[finding.severity] !== undefined)
+    .sort((a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity]);
 }
 
 function nameFromJournal(file, fallback) {
@@ -184,6 +191,12 @@ export function summaryMarkdown(data, reportPath) {
     ...data.sessions.map((session) => `| ${session.persona_name} | ${session.mission} | ${session.outcome} | ${session.steps} | ${session.longest_wait_seconds}s |`),
     '',
   ];
+
+  for (const [label, list] of [['Accessibility', data.a11y], ['UX', data.ux]]) {
+    if (list === null) continue;
+    const serious = list.filter((finding) => ['critical', 'high'].includes(finding.severity)).length;
+    lines.push(`${label} inspector: ${list.length} finding${list.length === 1 ? '' : 's'}, ${serious} high or critical.`, '');
+  }
 
   if (data.findings.length === 0) {
     lines.push('No issues were recorded.');
