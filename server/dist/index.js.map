@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../src/server-info.ts"],
-  "sourcesContent": ["export const serverInfo = {\n  name: 'personaqa-browser',\n  version: '0.1.0',\n} as const;\n"],
-  "mappings": ";AAAO,IAAM,aAAa;AAAA,EACxB,MAAM;AAAA,EACN,SAAS;AACX;",
-  "names": []
-}
