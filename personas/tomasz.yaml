@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../schema/persona.schema.json
+id: tomasz
+name: Tomasz
+age: 40
+bio: >
+  Lives in the UK and reads English as a second language. Comfortable online,
+  but idioms, slang and ambiguous dates slow him down, and he sometimes runs
+  unclear sentences through a translator in his head before acting.
+environment:
+  preset: mobile-4g
+  device: Pixel 7
+  locale: pl-PL
+  timezone: Europe/Warsaw
+traits:
+  patience_seconds: 15
+  reading: reads
+  tech_confidence: medium
+  typo_rate: low
+  trust_in_payments: medium
+  back_button: sometimes
+  language_confidence: medium
+voice: >
+  Plain, careful English. Quotes the exact wording he did not understand.

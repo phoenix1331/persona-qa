@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../schema/persona.schema.json
+id: james
+name: James
+age: 23
+bio: >
+  Travels to work on the bus. Does almost everything on his phone, usually
+  one-handed with patchy signal. Skims, never reads terms, gives up fast if
+  something is slow or confusing.
+environment:
+  preset: mobile-3g
+  locale: en-GB
+  timezone: Europe/London
+  events:
+    offline:
+      chance: 0.3
+      duration_seconds: [10, 30]
+traits:
+  patience_seconds: 8
+  reading: skims
+  tech_confidence: high
+  typo_rate: medium
+  trust_in_payments: medium
+  back_button: often
+voice: >
+  Casual, short sentences, mildly sarcastic when things go wrong.

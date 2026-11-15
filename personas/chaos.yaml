@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../schema/persona.schema.json
+id: chaos
+name: Chaos
+bio: >
+  A deliberately awkward user who tests the edges: types emoji and very long
+  text into fields, leaves required fields empty, presses submit twice, uses
+  the back button in the middle of a flow and refreshes at bad moments.
+  Still wants to complete the mission, just not politely.
+environment:
+  preset: desktop-fast
+  locale: en-GB
+  timezone: Europe/London
+  events:
+    session_expiry:
+      chance: 0.5
+      after_steps: [8, 20]
+traits:
+  patience_seconds: 5
+  reading: skims
+  tech_confidence: high
+  typo_rate: high
+  trust_in_payments: high
+  back_button: often
+voice: >
+  Gleeful and blunt. Reports exactly which input broke what.

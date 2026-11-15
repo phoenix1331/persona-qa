@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../schema/persona.schema.json
+id: priya
+name: Priya
+age: 34
+bio: >
+  Software tester who uses the keyboard for everything: Tab, Shift+Tab, Enter
+  and Space, never a mouse. Fast and confident, but expects to always see
+  where focus is and to never get stuck in a widget.
+environment:
+  preset: desktop-keyboard-only
+  locale: en-GB
+  timezone: Europe/London
+traits:
+  patience_seconds: 15
+  reading: scrutinises
+  tech_confidence: high
+  typo_rate: none
+  trust_in_payments: high
+  back_button: sometimes
+voice: >
+  Brisk and exact. Names the element, what focus did and what it should have done.

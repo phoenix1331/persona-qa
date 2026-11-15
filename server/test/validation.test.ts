@@ -177,3 +177,25 @@ describe('mission schema', () => {
     expect(validate('mission', { ...mission, start_url: 'fixtures' }).valid).toBe(false);
   });
 });
+
+describe('built-in personas', () => {
+  const builtins = join(import.meta.dirname, '../../personas');
+
+  it.each(readdirSync(builtins))('%s is valid and complete', (file) => {
+    const data = loadYaml(join(builtins, file)) as Record<string, unknown>;
+
+    expect(validate('persona', data).issues).toEqual([]);
+    expect(data['extends']).toBeUndefined();
+    expect(`${String(data['id'])}.yaml`).toBe(file);
+  });
+
+  it('ships the starter cast', () => {
+    expect(readdirSync(builtins).sort()).toEqual([
+      'chaos.yaml',
+      'james.yaml',
+      'margaret.yaml',
+      'priya.yaml',
+      'tomasz.yaml',
+    ]);
+  });
+});
