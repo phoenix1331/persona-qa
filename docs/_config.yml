@@ -1,0 +1,22 @@
+title: PersonaQA
+description: QA agents that use your app like real people. A Claude Code plugin.
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+plugins:
+  - jekyll-remote-theme
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: false
+logo: /media/logo.webp
+search_enabled: true
+heading_anchors: true
+aux_links:
+  "PersonaQA on GitHub": https://github.com/phoenix1331/persona-qa
+aux_links_new_tab: true
+back_to_top: true
+back_to_top_text: Back to top
+footer_content: "MIT licence. Personas are simulated users: confirm findings before acting on them."
+exclude:
+  - media/*.mjs
+  - media/*.json
+  - media/short-script.md

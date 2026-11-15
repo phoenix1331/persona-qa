@@ -1,6 +1,11 @@
+---
+title: Sample journal
+nav_order: 11
+---
+
 # Sample run: Margaret on checkout
 
-One session folder from a real run of the five built-in personas against the demo ticket shop (`/personaqa:run james,margaret,priya,tomasz,chaos checkout`). Everything below was written by PersonaQA: the journal by the persona agent, the table, timings and screenshots by the browser server. For a walkthrough of another persona's run and the report, see the [GIF in the README](../README.md).
+One session folder from a real run of the five built-in personas against the demo ticket shop (`/personaqa:run james,margaret,priya,tomasz,chaos checkout`). Everything below was written by PersonaQA: the journal by the persona agent, the table, timings and screenshots by the browser server. For a walkthrough of another persona's run and the report, see the [walkthrough on the home page](index.md).
 
 ## journal.md
 

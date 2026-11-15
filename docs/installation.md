@@ -1,3 +1,8 @@
+---
+title: Installation
+nav_order: 9
+---
+
 # Installing PersonaQA
 
 ## Install

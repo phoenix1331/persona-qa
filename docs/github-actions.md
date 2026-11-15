@@ -1,11 +1,16 @@
+---
+title: CI with GitHub Actions
+nav_order: 7
+---
+
 # Running PersonaQA in GitHub Actions
 
-Two example workflows live in [`examples/github/`](../examples/github/). Copy them into your app's `.github/workflows/`.
+Two example workflows live in [`examples/github/`](https://github.com/phoenix1331/persona-qa/tree/main/examples/github). Copy them into your app's `.github/workflows/`.
 
 | Workflow | When | What it runs | Output |
 |----------|------|--------------|--------|
-| [`personaqa-pull-request.yml`](../examples/github/personaqa-pull-request.yml) | Every pull request | The `pull_request` set from `.personaqa/config.yaml` (keep it small: two personas, one or two key missions) against the PR's preview deploy | `summary.md` as a sticky PR comment, run folder as an artifact |
-| [`personaqa-nightly.yml`](../examples/github/personaqa-nightly.yml) | Nightly and on demand | The `nightly` set (usually the full cast) against staging | GitHub issues for findings at or above `issues.github.min_severity`, run folder as an artifact |
+| [`personaqa-pull-request.yml`](https://github.com/phoenix1331/persona-qa/blob/main/examples/github/personaqa-pull-request.yml) | Every pull request | The `pull_request` set from `.personaqa/config.yaml` (keep it small: two personas, one or two key missions) against the PR's preview deploy | `summary.md` as a sticky PR comment, run folder as an artifact |
+| [`personaqa-nightly.yml`](https://github.com/phoenix1331/persona-qa/blob/main/examples/github/personaqa-nightly.yml) | Nightly and on demand | The `nightly` set (usually the full cast) against staging | GitHub issues for findings at or above `issues.github.min_severity`, run folder as an artifact |
 
 Persona runs are exploration, not a pass/fail gate: the workflows never fail the build because of findings.
 

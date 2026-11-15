@@ -1,3 +1,8 @@
+---
+title: Reading the results
+nav_order: 6
+---
+
 # Reading the results
 
 Every `/personaqa:run` ends with a run folder, a short summary for people in a hurry and a full report for people who want the evidence. The screenshots below come from a real run of the five built-in personas through checkout on the demo ticket shop.
@@ -7,7 +12,9 @@ Every `/personaqa:run` ends with a run folder, a short summary for people in a h
 ```
 .personaqa/runs/2026-11-15T19-23-53/
 ├── summary.md            short Markdown summary, used as the PR comment
-├── report.html           the full report: one self-contained file, open it in any browser
+├── report.html           the full report: open it in any browser
+├── report.pdf            every section expanded, for printing or attaching to a ticket
+├── report-standalone.html  one file with screenshots embedded, safe to email
 ├── report.json           the same data, for /personaqa:report and /personaqa:test
 ├── findings.json         the coordinator's merged findings
 ├── a11y.json, ux.json    the inspectors' findings
@@ -25,6 +32,35 @@ Every `/personaqa:run` ends with a run folder, a short summary for people in a h
 Facts come from the server (`run.json`, `actions.log`, the trace). Journals are each persona's memory of the run: vivid and useful, but occasionally wrong about a detail. The report keeps the two apart.
 
 Open a trace with `npx playwright show-trace <session folder>/trace.zip` to replay a run step by step.
+
+## Getting the report
+
+When a run finishes, Claude replies with the summary and clickable links:
+
+```
+Report:     file:///.../.personaqa/runs/2026-11-15T19-23-53/report.html
+PDF:        file:///.../report.pdf
+Standalone: file:///.../report-standalone.html
+```
+
+| To | Do |
+|----|----|
+| Open the latest report in your browser | `/personaqa:report open` |
+| See the summary and links again | `/personaqa:report` |
+| Rebuild the report and exports | `/personaqa:report export` |
+| Open an older run | `/personaqa:report 2026-11-14T21-50-12` |
+
+## Sharing and exporting
+
+The report's header has **Download PDF** and **Standalone HTML** buttons. Both files are made at the end of every run.
+
+| Format | Best for |
+|--------|----------|
+| `report.html` | Working through findings: tabs, filters, evidence. Needs the run folder beside it for screenshots |
+| `report-standalone.html` | Sending to someone: one file, screenshots shrunk and embedded, opens anywhere |
+| `report.pdf` | Printing, attaching to a ticket or a review: every section expanded |
+| `summary.md` | Pull request comments and chat |
+| The run folder, zipped | Everything, including journals, traces and every screenshot |
 
 ## summary.md
 

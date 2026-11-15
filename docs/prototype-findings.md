@@ -1,3 +1,8 @@
+---
+title: Design notes
+nav_order: 12
+---
+
 # Prototype findings: stock Playwright MCP
 
 Before writing any server code, James (23, phone, patchy signal, impatient) was run through the checkout mission using only the stock Playwright MCP (`@playwright/mcp` 0.0.85, `--viewport-size 390,844 --isolated`) and a persona prompt. The app under test was the local Matchday Tickets app with 15 planted flaws. Each gap below is a reason for a feature of the PersonaQA browser server.

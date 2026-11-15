@@ -72,7 +72,9 @@ In your app's repository:
 /personaqa:run james first-visit
 ```
 
-The first session downloads a headless Chromium (about 290 MB) in the background. Point PersonaQA at staging, preview or local deploys only: personas fill in forms and pay with test cards. See [installation](docs/installation.md) for team setup and updates.
+The first session downloads a headless Chromium (about 290 MB) in the background. Point PersonaQA at staging, preview or local deploys only: personas fill in forms and pay with test cards.
+
+**Documentation:** the [guide](https://phoenix1331.github.io/persona-qa/) walks through [getting started](docs/getting-started.md), writing [missions](docs/missions.md), adding and configuring [personas](docs/personas.md), testing behind a [login](docs/authentication.md), [reading and exporting results](docs/reporting.md), [CI](docs/github-actions.md) and the [configuration reference](docs/configuration.md).
 
 ## Commands
 
@@ -80,11 +82,12 @@ The first session downloads a headless Chromium (about 290 MB) in the background
 |---------|------|
 | `/personaqa:init [base-url]` | Scaffolds `.personaqa/` (config, a starter mission) and gitignores run output |
 | `/personaqa:run [personas] [missions] [--set NAME] [--base-url URL] [--with a11y\|ux] [--no-inspectors]` | Runs the cast in parallel, then the inspectors and the coordinator |
-| `/personaqa:report [run] \| confirm ISSUE-n \| dismiss ISSUE-n "reason" \| file [--yes]` | Opens a report, records triage decisions (dismissals are remembered across runs), files GitHub issues with `a11y` and `wcag-x.y.z` labels |
+| `/personaqa:report [run] \| open \| export \| confirm ISSUE-n \| dismiss ISSUE-n "reason" \| file [--yes]` | Shows or opens a report, exports it as PDF or a standalone HTML file, records triage decisions (dismissals are remembered across runs), files GitHub issues with `a11y` and `wcag-x.y.z` labels |
 | `/personaqa:test ISSUE-n` | Writes a deterministic Playwright test that fails until the finding is fixed |
 | `/personaqa:persona new "<description>"` | Drafts a schema-valid persona from a plain-English description |
 | `/personaqa:audit [missions]` | A quick accessibility sweep with no personas |
 | `/personaqa:validate` | Checks config, personas and missions and lists every problem |
+| `/personaqa:auth [account]` | Signs in once and saves the login so personas can test signed-in pages |
 
 Plain English works too: "get James and Margaret to try checkout with the accessibility inspector". Agents can be called directly, for example `@agent-personaqa:a11y-inspector review the last run`.
 
@@ -120,7 +123,7 @@ Override or extend any of them in `.personaqa/personas/` (`extends: james`), or 
 
 <p align="center"><img src="docs/media/report-findings.jpg" alt="PersonaQA report: ranked findings with severity, personas affected and suggested fixes" width="760"></p>
 
-Every run ends with `summary.md` (for a pull request comment) and a self-contained `report.html`: findings merged across personas and ranked by severity times the number of people affected, the evidence behind each (who, which step, screenshots), each persona's journal, and Accessibility and UX tabs from the inspectors. From there, confirm or dismiss findings (dismissals are remembered), file them as GitHub issues, or turn one into a Playwright test. See [Reading the results](docs/reporting.md) for a tour.
+Every run ends with `summary.md` (for a pull request comment) and a self-contained `report.html`: findings merged across personas and ranked by severity times the number of people affected, the evidence behind each (who, which step, screenshots), each persona's journal, and Accessibility and UX tabs from the inspectors. It ends with clickable links to the report, a PDF and a standalone HTML copy with screenshots embedded, ready to share. From there, confirm or dismiss findings (dismissals are remembered), file them as GitHub issues, or turn one into a Playwright test. See [Reading the results](docs/reporting.md) for a tour.
 
 ## In CI
 
@@ -133,7 +136,7 @@ Example workflows run a small persona set on every pull request (posting `summar
 - **False positives.** The coordinator merges duplicates and applies explicit severity rules, and a person confirms before anything becomes a test or an issue.
 - **Coverage follows missions.** Personas only find what their missions lead them to; two of the demo's misses were on pages checkout never visits.
 - **Accessibility.** Automated scans and persona evidence catch only part of WCAG. They complement an audit with assistive technology users; they do not replace one.
-- **Auth, CAPTCHA and 2FA.** Use stored login state and test environments with these disabled.
+- **Logins, CAPTCHA and 2FA.** `/personaqa:auth` saves a login automatically; sites with CAPTCHA, single sign-on or two-factor codes need a login saved by hand once, or a test environment with them disabled. See [Logins](docs/authentication.md).
 
 ## Development
 
