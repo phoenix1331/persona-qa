@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../../schema/mission.schema.json
+id: signup
+goal: Create an account so you can keep your tickets in one place.
+start_url: /fixtures
+time_limit_minutes: 3
+success:
+  all:
+    - url_contains: /account
+    - text_visible: My tickets
+data:
+  password: "correct-horse-battery"
+context: >
+  Use a new email address. The persona has not used this site before.

@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/config.schema.json
+version: 1
+
+app:
+  name: Matchday Tickets
+  base_url: http://127.0.0.1:8000
+  allowed_domains:
+    - 127.0.0.1:8000
+
+auth:
+  strategy: none
+  accounts:
+    default:
+      email: ${PERSONAQA_USER_EMAIL}
+      password: ${PERSONAQA_USER_PASSWORD}
+
+runner:
+  max_parallel: 3
+  max_steps_per_run: 60
+  max_minutes_per_run: 8
+
+personas:
+  enabled: [james, margaret, priya, tomasz, chaos]
+  paths: [.personaqa/personas]
+
+output:
+  dir: .personaqa/runs
+  screenshots: on_issue
+  trace: on_failure
+  regression_tests: suggest
+
+issues:
+  sink: file
+  github:
+    labels: [personaqa, ux]
+    min_severity: medium
+
+ci:
+  pull_request:
+    personas: [james, priya]
+    missions: [checkout]
+  nightly:
+    personas: all
+    missions: all
+
+inspectors:
+  a11y:
+    enabled: true
+    standard: wcag22
+    level: AA
+    mode: ride_along
+    ignore: [color-contrast-enhanced]
+  ux:
+    enabled: true
+    heuristics: nielsen

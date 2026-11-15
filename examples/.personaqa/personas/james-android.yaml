@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=../../../schema/persona.schema.json
+id: james-android
+extends: james
+environment:
+  preset: mobile-4g
+  device: Pixel 7

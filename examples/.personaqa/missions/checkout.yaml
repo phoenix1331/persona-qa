@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schema/mission.schema.json
+id: checkout
+goal: Buy one adult ticket for Saturday's match and get to the confirmation page.
+start_url: /fixtures
+time_limit_minutes: 4
+success:
+  any:
+    - url_contains: /order/confirmed
+    - text_visible: Order confirmed
+data:
+  card: "4242 4242 4242 4242"
+  expiry: "12/30"
+  cvc: "123"
+context: >
+  The persona knows which match they want but not the stadium layout.
