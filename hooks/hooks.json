@@ -1,0 +1,16 @@
+{
+  "description": "PersonaQA: install the browser on first run.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/setup.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

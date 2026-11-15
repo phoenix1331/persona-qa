@@ -2,7 +2,7 @@ import { build } from 'esbuild';
 
 await build({
   entryPoints: ['src/index.ts'],
-  outfile: 'dist/index.js',
+  outfile: 'dist/index.mjs',
   bundle: true,
   platform: 'node',
   format: 'esm',

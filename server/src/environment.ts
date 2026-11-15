@@ -1,11 +1,6 @@
-import {
-  type BrowserContext,
-  type BrowserContextOptions,
-  type CDPSession,
-  type Page,
-  devices,
-} from 'playwright';
+import type { BrowserContext, BrowserContextOptions, CDPSession, Page } from 'playwright';
 import { PersonaQAError } from './errors.js';
+import { playwright } from './playwright.js';
 import type { InputMethod, NetworkProfile, PersonaEnvironment, PresetName } from './types.js';
 
 interface Preset {
@@ -85,7 +80,7 @@ export interface ResolvedEnvironment {
 export function resolveEnvironment(environment: PersonaEnvironment): ResolvedEnvironment {
   const preset = PRESETS[environment.preset];
   const deviceName = environment.device ?? preset.device;
-  const device = deviceName === undefined ? undefined : devices[deviceName];
+  const device = deviceName === undefined ? undefined : playwright().devices[deviceName];
 
   if (deviceName !== undefined && device === undefined) {
     throw new PersonaQAError(

@@ -1,11 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import {
-  type Browser,
-  type BrowserContext,
-  type CDPSession,
-  type Page,
-  chromium,
-} from 'playwright';
+import type { Browser, BrowserContext, CDPSession, Page } from 'playwright';
 import { Activity } from './activity.js';
 import { isAllowedUrl } from './domain-guard.js';
 import {
@@ -15,6 +9,7 @@ import {
   resolveEnvironment,
 } from './environment.js';
 import { PersonaQAError } from './errors.js';
+import { playwright, setupMessage } from './playwright.js';
 import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
 import type { Config, Mission, Persona } from './types.js';
@@ -225,7 +220,22 @@ export class SessionManager {
   }
 
   private async ensureBrowser(): Promise<Browser> {
-    this.browser ??= await chromium.launch({ headless: this.options.headless ?? true });
+    if (this.browser === undefined) {
+      try {
+        this.browser = await playwright().chromium.launch({
+          headless: this.options.headless ?? true,
+        });
+      } catch (error) {
+        if (error instanceof PersonaQAError) throw error;
+        const message = (error as Error).message;
+        if (/Executable doesn't exist|browserType\.launch/.test(message)) {
+          throw new PersonaQAError(
+            setupMessage(process.env['PERSONAQA_DATA'], 'Chromium is not installed yet.'),
+          );
+        }
+        throw error;
+      }
+    }
     return this.browser;
   }
 }
