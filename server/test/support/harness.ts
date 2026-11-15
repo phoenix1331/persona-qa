@@ -59,6 +59,7 @@ export async function connect(project: Project): Promise<{
 }> {
   const sessions = new SessionManager({
     loader: () => new Loader({ projectDir: project.dir, builtinPersonaDir: project.builtins }),
+    projectDir: project.dir,
   });
   const server = createServer(sessions);
   const client = new Client({ name: 'test', version: '1.0.0' });

@@ -14,6 +14,7 @@ const projectDir =
 
 const sessions = new SessionManager({
   loader: () => new Loader({ projectDir, builtinPersonaDir: join(pluginRoot, 'personas') }),
+  projectDir,
   headless: process.env['PERSONAQA_HEADED'] !== '1',
 });
 

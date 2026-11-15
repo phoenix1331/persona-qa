@@ -19,6 +19,7 @@ import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
 import type { Config, Mission, Persona } from './types.js';
 import { seededRandom } from './typos.js';
+import { type Issue, RunWriter, newRunId, runDirFor } from './writer.js';
 
 export type Outcome = 'success' | 'abandoned' | 'limit' | 'incomplete';
 
@@ -49,14 +50,20 @@ export interface Session {
   patienceBreaches: number;
   /** Longest single wait in the run, for the report. */
   longestWaitMs: number;
+  runId: string;
+  writer: RunWriter;
+  issues: Issue[];
 }
 
 export interface StartOptions {
   baseUrl?: string;
+  /** Groups parallel sessions into one run folder. */
+  runId?: string;
 }
 
 export interface SessionManagerOptions {
   loader: () => Loader;
+  projectDir: string;
   headless?: boolean;
 }
 
@@ -90,6 +97,11 @@ export class SessionManager {
     await applyNetwork(cdp, environment.network);
 
     const id = `${persona.id}--${mission.id}--${randomBytes(2).toString('hex')}`;
+    const runId = options.runId ?? newRunId();
+    const writer = new RunWriter(
+      runDirFor(this.options.projectDir, config.output.dir, runId, `${persona.id}--${mission.id}`),
+      this.options.projectDir,
+    );
     const session: Session = {
       id,
       persona,
@@ -112,9 +124,13 @@ export class SessionManager {
       lastActionMs: 0,
       patienceBreaches: 0,
       longestWaitMs: 0,
+      runId,
+      writer,
+      issues: [],
     };
 
     await this.guard(session);
+    await writer.startTrace(session);
     this.sessions.set(session.id, session);
 
     try {
@@ -124,6 +140,10 @@ export class SessionManager {
         `The first page did not load: ${(error as Error).message.split('\n')[0]}`,
       );
     }
+    writer.log(
+      session,
+      `start ${persona.id} x ${mission.id} at ${startUrl} (${environment.description})`,
+    );
 
     return session;
   }

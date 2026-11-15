@@ -24,15 +24,19 @@ export function createServer(sessions: SessionManager): McpServer {
         persona: z.string().describe('Persona id, e.g. james'),
         mission: z.string().describe('Mission id, e.g. checkout'),
         base_url: z.string().optional().describe('Overrides app.base_url, e.g. a preview deploy'),
+        run_id: z
+          .string()
+          .regex(/^[A-Za-z0-9T:._-]+$/)
+          .optional()
+          .describe('Shared id so parallel sessions write into one run folder'),
       },
     },
-    async ({ persona, mission, base_url }) =>
+    async ({ persona, mission, base_url, run_id }) =>
       respond(async () => {
-        const session = await sessions.start(
-          persona,
-          mission,
-          base_url === undefined ? {} : { baseUrl: base_url },
-        );
+        const session = await sessions.start(persona, mission, {
+          ...(base_url === undefined ? {} : { baseUrl: base_url }),
+          ...(run_id === undefined ? {} : { runId: run_id.replaceAll(':', '-') }),
+        });
         const ended = await evaluate(session, async (outcome, reason) =>
           sessions.end(session, outcome, reason),
         );
@@ -57,31 +61,45 @@ export function createServer(sessions: SessionManager): McpServer {
         const limit = limitReached(session);
         if (limit !== null) {
           sessions.end(session, 'limit', limit);
+          session.writer.log(session, `end limit: ${limit}`);
           return `The session has ended: ${limit}. Call finish with your journal.`;
         }
+        session.writer.log(session, `look${screenshot === true ? ' +screenshot' : ''}`);
         return view(session, screenshot === true);
       }),
   );
 
-  const act = (id: string, action: (session: Session) => Promise<ActionResult>) =>
+  const act = (
+    id: string,
+    name: string,
+    detail: string,
+    action: (session: Session) => Promise<ActionResult>,
+  ) =>
     respond(async () => {
       const session = sessions.active(id);
       const result = await action(session);
       session.steps += 1;
       session.lastActionMs = result.durationMs;
       session.longestWaitMs = Math.max(session.longestWaitMs, result.durationMs);
+      session.writer.log(
+        session,
+        `${name} ${detail} (${(result.durationMs / 1000).toFixed(1)}s) ${session.page.url()} :: ${result.summary}`,
+      );
+      await session.writer.afterAction(session, name);
 
       const patience = patienceNotice(session, result.durationMs);
       if (patience !== null) {
         session.notices.push(patience);
+        session.writer.log(session, `patience ${patience}`);
       }
 
       const seconds = result.durationMs / 1000;
       const waited = seconds >= 1 ? ` The page took ${seconds.toFixed(1)}s to respond.` : '';
       const screen = await view(session, false);
-      const ended = await evaluate(session, async (outcome, reason) =>
-        sessions.end(session, outcome, reason),
-      );
+      const ended = await evaluate(session, async (outcome, reason) => {
+        sessions.end(session, outcome, reason);
+        session.writer.log(session, `end ${outcome}: ${reason}`);
+      });
       const text = `${result.summary}${waited}\n\n${screen.text}`;
       return { text: ended === null ? text : `${text}\n\n${ended}` };
     });
@@ -94,7 +112,7 @@ export function createServer(sessions: SessionManager): McpServer {
         'Taps (or clicks) the spot where a control is on screen. If something covers it, whatever is on top gets the tap. Returns the screen afterwards.',
       inputSchema: { session: z.string(), ref: z.string().describe('Ref from look, e.g. e12') },
     },
-    async ({ session, ref }) => act(session, (current) => tap(current, ref)),
+    async ({ session, ref }) => act(session, 'tap', ref, (current) => tap(current, ref)),
   );
 
   server.registerTool(
@@ -111,7 +129,12 @@ export function createServer(sessions: SessionManager): McpServer {
       },
     },
     async ({ session, ref, text, submit }) =>
-      act(session, (current) => type(current, ref, text, submit === true)),
+      act(
+        session,
+        'type',
+        `${ref} ${JSON.stringify(text)}${submit === true ? ' +Enter' : ''}`,
+        (current) => type(current, ref, text, submit === true),
+      ),
   );
 
   server.registerTool(
@@ -122,7 +145,7 @@ export function createServer(sessions: SessionManager): McpServer {
         'Presses a keyboard key, e.g. Tab to move focus, Enter to activate, Escape to close.',
       inputSchema: { session: z.string(), key: z.enum(KEYS) },
     },
-    async ({ session, key }) => act(session, (current) => pressKey(current, key)),
+    async ({ session, key }) => act(session, 'press', key, (current) => pressKey(current, key)),
   );
 
   server.registerTool(
@@ -137,7 +160,9 @@ export function createServer(sessions: SessionManager): McpServer {
       },
     },
     async ({ session, direction, amount }) =>
-      act(session, (current) => scroll(current, direction, amount ?? 'screen')),
+      act(session, 'scroll', `${direction} ${amount ?? 'screen'}`, (current) =>
+        scroll(current, direction, amount ?? 'screen'),
+      ),
   );
 
   server.registerTool(
@@ -147,7 +172,7 @@ export function createServer(sessions: SessionManager): McpServer {
       description: "Presses the browser's back button.",
       inputSchema: { session: z.string() },
     },
-    async ({ session }) => act(session, (current) => back(current)),
+    async ({ session }) => act(session, 'back', '', (current) => back(current)),
   );
 
   server.registerTool(
@@ -176,6 +201,8 @@ export function createServer(sessions: SessionManager): McpServer {
           session.outcome ?? 'incomplete',
           session.endReason ?? 'finished by persona',
         );
+        session.writer.log(session, `finish ${session.outcome ?? 'incomplete'}`);
+        const files = await session.writer.complete(session);
         await sessions.close(session);
 
         return [
@@ -183,6 +210,7 @@ export function createServer(sessions: SessionManager): McpServer {
           `Outcome: ${session.outcome ?? 'incomplete'} (${session.endReason ?? 'finished by persona'})`,
           `Steps: ${session.steps}`,
           `Duration: ${Math.round((Date.now() - session.startedAt) / 1000)}s`,
+          `Run files: ${files.join(', ')}`,
         ].join('\n');
       }),
   );

@@ -57,7 +57,7 @@ export const PRESETS: Record<PresetName, Preset> = {
     viewport: { width: 1280, height: 800 },
     input: 'mouse',
     network: 'wifi',
-    summary: 'desktop with mouse, fast connection',
+    summary: 'desktop, mouse, fast connection',
   },
 };
 
