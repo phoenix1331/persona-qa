@@ -1,0 +1,52 @@
+# Copy to .github/workflows/personaqa-nightly.yml in your app's repository.
+# Runs the `nightly` set (normally the full cast) against staging and files findings at or above
+# issues.github.min_severity as GitHub issues, skipping dismissed and already filed ones.
+name: personaqa-nightly
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install Chromium for PersonaQA
+        run: |
+          PLAYWRIGHT_BROWSERS_PATH="$HOME/.claude/plugins/data/personaqa-persona-qa/browsers" \
+            npx --yes playwright@1.65.1 install --with-deps --only-shell chromium
+
+      - name: Run the cast and file issues
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/phoenix1331/persona-qa.git
+          plugins: personaqa@persona-qa
+          prompt: |
+            /personaqa:run --set nightly
+            When the run has finished, run /personaqa:report file --yes
+          claude_args: >-
+            --max-turns 400
+            --allowedTools "Agent,Read,Glob,Write,Bash(node *),Bash(gh issue *),Bash(gh label *),mcp__plugin_personaqa_browser__*"
+
+      - name: Keep the evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: personaqa-nightly
+          path: .personaqa/runs/
+          retention-days: 30

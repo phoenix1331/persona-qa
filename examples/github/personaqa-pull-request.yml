@@ -1,0 +1,69 @@
+# Copy to .github/workflows/personaqa-pull-request.yml in your app's repository.
+# Runs the `pull_request` set from .personaqa/config.yaml against the PR's preview deploy
+# and posts summary.md as a sticky PR comment.
+name: personaqa
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: personaqa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  personas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Replace with however your pipeline exposes the preview URL (a deploy job output, a URL pattern, etc.)
+      PREVIEW_URL: https://pr-${{ github.event.pull_request.number }}.preview.example.com
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      # The plugin's setup hook installs Chromium in the background on first use, which is too late in a
+      # one-shot CI job. Install it up front into the folder the plugin reads (its data folder).
+      - name: Install Chromium for PersonaQA
+        run: |
+          PLAYWRIGHT_BROWSERS_PATH="$HOME/.claude/plugins/data/personaqa-persona-qa/browsers" \
+            npx --yes playwright@1.65.1 install --with-deps --only-shell chromium
+
+      - name: Run personas
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: https://github.com/phoenix1331/persona-qa.git
+          plugins: personaqa@persona-qa
+          prompt: /personaqa:run --set pull_request --base-url ${{ env.PREVIEW_URL }}
+          claude_args: >-
+            --max-turns 150
+            --allowedTools "Agent,Read,Glob,Write,Bash(node *),mcp__plugin_personaqa_browser__*"
+
+      - name: Comment the summary on the PR
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_dir=$(ls -td .personaqa/runs/*/ 2>/dev/null | head -1)
+          if [ -z "$run_dir" ] || [ ! -f "$run_dir/summary.md" ]; then
+            echo "No PersonaQA summary was produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          cat "$run_dir/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          gh pr comment ${{ github.event.pull_request.number }} --body-file "$run_dir/summary.md" --edit-last \
+            || gh pr comment ${{ github.event.pull_request.number }} --body-file "$run_dir/summary.md"
+
+      - name: Keep the evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: personaqa-run
+          path: .personaqa/runs/
+          retention-days: 14

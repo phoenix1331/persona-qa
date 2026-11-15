@@ -31,7 +31,7 @@ Files findings as GitHub issues with the `gh` CLI.
 2. Get the candidates as JSON: `node "${CLAUDE_PLUGIN_ROOT}/scripts/triage.mjs" github "<run folder>" --labels <labels> --min-severity <min>` plus the ids if given. With no ids this returns confirmed findings only; add `--all` when `issues.sink` is `github` (the unattended nightly case). Dismissed and already filed findings are never returned.
 3. If there are none, say so and stop.
 4. Unless `--yes` was given, show the titles and labels and ask the user to confirm before creating anything: issues are public to everyone with access to the repository.
-5. For each candidate: make sure its labels exist (`gh label create <name> --force` is safe to repeat), then `gh issue create --title "<title>" --label "<labels joined by commas>" --body "<body>"`. Pass the body exactly as given.
+5. For each candidate: skip it if an open issue already has the same title (`gh issue list --state open --label personaqa --search "<title> in:title" --json number,title`); `triage.json` is not always committed back from CI, so this is the check that prevents nightly duplicates. Otherwise make sure its labels exist (`gh label create <name> --force` is safe to repeat), then `gh issue create --title "<title>" --label "<labels joined by commas>" --body "<body>"`. Pass the body exactly as given.
 6. Record each one: `node "${CLAUDE_PLUGIN_ROOT}/scripts/triage.mjs" filed "<run folder>" ISSUE-n <issue url>`, then re-run `report.mjs`.
 7. Reply with the issue links.
 
