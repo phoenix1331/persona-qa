@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { Browser, BrowserContext, CDPSession, Page } from 'playwright';
 import { Activity } from './activity.js';
+import { SIGNIN_PERSONA, type SessionAuth, planAuth } from './auth.js';
 import type { A11yScan } from './audit.js';
 import { isAllowedUrl } from './domain-guard.js';
 import {
@@ -54,12 +55,15 @@ export interface Session {
   firedEvents: FiredEvent[];
   a11yScans: A11yScan[];
   seenStates: Set<string>;
+  auth: SessionAuth;
 }
 
 export interface StartOptions {
   baseUrl?: string;
   /** Groups parallel sessions into one run folder. */
   runId?: string;
+  /** Save the browser's login when the mission succeeds (/personaqa:auth). */
+  saveLogin?: boolean;
 }
 
 export interface SessionManagerOptions {
@@ -76,12 +80,8 @@ export class SessionManager {
 
   async start(personaId: string, missionId: string, options: StartOptions = {}): Promise<Session> {
     const loader = this.options.loader();
-    return this.startWith(
-      loader.config(),
-      loader.persona(personaId),
-      loader.mission(missionId),
-      options,
-    );
+    const persona = personaId === SIGNIN_PERSONA.id ? SIGNIN_PERSONA : loader.persona(personaId);
+    return this.startWith(loader.config(), persona, loader.mission(missionId), options, loader);
   }
 
   /** Starts a session from already loaded objects, e.g. the neutral persona an accessibility sweep uses. */
@@ -90,10 +90,20 @@ export class SessionManager {
     persona: Persona,
     mission: Mission,
     options: StartOptions = {},
+    loader?: Loader,
   ): Promise<Session> {
     const baseUrl = options.baseUrl ?? config.app.base_url;
     const allowed = this.allowedDomains(config, baseUrl, options.baseUrl !== undefined);
-    const startUrl = new URL(mission.start_url, baseUrl).toString();
+    const auth = planAuth(
+      config,
+      mission,
+      loader,
+      this.options.projectDir,
+      options.saveLogin === true ? { saveLogin: true } : {},
+    );
+    const firstMission =
+      auth.phase === 'login' && auth.loginMission !== undefined ? auth.loginMission : mission;
+    const startUrl = new URL(firstMission.start_url, baseUrl).toString();
 
     if (!isAllowedUrl(startUrl, allowed)) {
       throw new PersonaQAError(
@@ -103,7 +113,10 @@ export class SessionManager {
 
     const environment = resolveEnvironment(persona.environment);
     const browser = await this.ensureBrowser();
-    const context = await browser.newContext(environment.contextOptions);
+    const context = await browser.newContext({
+      ...environment.contextOptions,
+      ...(auth.storageState === undefined ? {} : { storageState: auth.storageState }),
+    });
     await applyTextZoom(context, environment.textZoom);
     const page = await context.newPage();
     const cdp = await context.newCDPSession(page);
@@ -144,6 +157,7 @@ export class SessionManager {
       firedEvents: [],
       a11yScans: [],
       seenStates: new Set(),
+      auth,
     };
 
     session.plannedEvents = planEvents(session);

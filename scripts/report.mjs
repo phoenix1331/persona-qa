@@ -5,8 +5,10 @@
 // coordinator), usage.json (written by the run skill), a11y.json and ux.json. Ranking and cost are computed here,
 // deterministically; merging duplicate issues is the coordinator's judgement.
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { homedir } from 'node:os';
+import { basename, dirname, join, resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { keyFor, loadTriage } from './triage.mjs';
 
 const SEVERITY_WEIGHT = { critical: 8, high: 5, medium: 3, low: 1 };
@@ -241,25 +243,134 @@ export function renderReport(template, data, logos) {
     .replace('{{DATA_JSON}}', () => json);
 }
 
-function main() {
-  const runDir = process.argv[2] === undefined ? undefined : resolve(process.argv[2]);
+/**
+ * Finds the plugin's downloaded browser. Scripts run through Bash do not get CLAUDE_PLUGIN_DATA, so work it out from
+ * where the plugin is installed (plugins/cache/<marketplace>/<plugin>/<version> maps to plugins/data/<plugin>-<marketplace>).
+ */
+export function browserCandidates(pluginRoot, home = homedir()) {
+  const candidates = [];
+  if (process.env.PLAYWRIGHT_BROWSERS_PATH) candidates.push(process.env.PLAYWRIGHT_BROWSERS_PATH);
+  const parts = pluginRoot.split(sep);
+  const cache = parts.lastIndexOf('cache');
+  if (cache > 0 && parts[cache - 1] === 'plugins' && parts.length >= cache + 3) {
+    const data = [...parts.slice(0, cache), 'data', `${parts[cache + 2]}-${parts[cache + 1]}`].join(sep);
+    candidates.push(join(data, 'browsers'));
+  }
+  const dataRoot = join(home, '.claude', 'plugins', 'data');
+  if (existsSync(dataRoot)) {
+    for (const name of readdirSync(dataRoot).filter((entry) => entry.startsWith('personaqa')).sort()) {
+      candidates.push(join(dataRoot, name, 'browsers'));
+    }
+  }
+  return candidates;
+}
+
+function loadPlaywright(pluginRoot) {
+  const browsers = browserCandidates(pluginRoot).find((path) => existsSync(path));
+  if (browsers !== undefined) process.env.PLAYWRIGHT_BROWSERS_PATH = browsers;
+  for (const origin of [import.meta.url, pathToFileURL(join(pluginRoot, 'package.json')).href]) {
+    try {
+      return createRequire(origin)('playwright');
+    } catch {
+      // try the next location
+    }
+  }
+  return null;
+}
+
+/** Screenshots the report shows: each finding's evidence and the last six per session. */
+function shownScreenshots(data) {
+  const paths = new Set();
+  for (const finding of data.findings) {
+    for (const item of finding.evidence) if (item.screenshot) paths.add(`${item.session}/${item.screenshot}`);
+  }
+  for (const session of data.sessions) {
+    for (const path of session.screenshots.slice(-6)) paths.add(`${session.dir}/${path}`);
+  }
+  return [...paths];
+}
+
+/** Writes report.pdf (every section expanded) and report-standalone.html (screenshots embedded and shrunk). */
+export async function exportReport(runDir, data, template, logos, pluginRoot) {
+  const playwright = loadPlaywright(pluginRoot);
+  if (playwright === null) return { pdf: null, standalone: null, warning: 'Playwright is not available, so the PDF and standalone exports were skipped.' };
+
+  let browser;
+  try {
+    browser = await playwright.chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    const images = {};
+    for (const path of shownScreenshots(data)) {
+      const file = join(runDir, path);
+      if (!existsSync(file)) continue;
+      const source = `data:image/jpeg;base64,${readFileSync(file).toString('base64')}`;
+      images[path] = await page.evaluate(async (uri) => {
+        const image = new Image();
+        image.src = uri;
+        await image.decode();
+        const scale = Math.min(1, 480 / image.naturalWidth);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(image.naturalWidth * scale);
+        canvas.height = Math.round(image.naturalHeight * scale);
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.72);
+      }, source);
+    }
+    writeFileSync(join(runDir, 'report-standalone.html'), renderReport(template, { ...data, standalone: true, images }, logos));
+
+    // Print from the standalone copy: its screenshots are already shrunk, which keeps the PDF small
+    await page.goto(pathToFileURL(join(runDir, 'report-standalone.html')).href);
+    await page.evaluate(() => window.personaqaPrint());
+    await page.waitForLoadState('load');
+    await page.evaluate(async () => {
+      await Promise.all([...document.images].filter((image) => !image.complete).map((image) => new Promise((done) => { image.onload = image.onerror = done; })));
+    });
+    await page.emulateMedia({ media: 'print' });
+    await page.pdf({ path: join(runDir, 'report.pdf'), format: 'A4', printBackground: true, margin: { top: '14mm', bottom: '14mm', left: '12mm', right: '12mm' } });
+    return { pdf: join(runDir, 'report.pdf'), standalone: join(runDir, 'report-standalone.html'), warning: null };
+  } catch (error) {
+    return { pdf: null, standalone: null, warning: `Export failed: ${error.message.split('\n')[0]}` };
+  } finally {
+    await browser?.close();
+  }
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const skipExport = args.includes('--no-export');
+  const runArg = args.find((arg) => !arg.startsWith('--'));
+  const runDir = runArg === undefined ? undefined : resolve(runArg);
   if (runDir === undefined || !existsSync(runDir)) {
-    console.error('usage: node scripts/report.mjs <run-dir>');
+    console.error('usage: node scripts/report.mjs <run-dir> [--no-export]');
     process.exit(1);
   }
 
   const pluginRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const dataUri = (file) => `data:image/webp;base64,${readFileSync(join(pluginRoot, 'templates', file)).toString('base64')}`;
-  const data = buildData(runDir, loadRun(runDir));
+  const logos = { onLight: dataUri('logo-dark.webp'), onDark: dataUri('logo-light.webp') };
+  const data = { ...buildData(runDir, loadRun(runDir)), exports: skipExport ? {} : { pdf: 'report.pdf', standalone: 'report-standalone.html' } };
   const template = readFileSync(join(pluginRoot, 'templates', 'report.html'), 'utf8');
 
   writeFileSync(join(runDir, 'report.json'), `${JSON.stringify(data, null, 2)}\n`);
-  writeFileSync(join(runDir, 'report.html'), renderReport(template, data, { onLight: dataUri('logo-dark.webp'), onDark: dataUri('logo-light.webp') }));
+  writeFileSync(join(runDir, 'report.html'), renderReport(template, data, logos));
   writeFileSync(join(runDir, 'summary.md'), summaryMarkdown(data, join(runDir, 'report.html')));
-  console.log(`report: ${join(runDir, 'report.html')}`);
+
+  const link = (path) => pathToFileURL(path).href;
+  console.log(`report: ${link(join(runDir, 'report.html'))}`);
   console.log(`summary: ${join(runDir, 'summary.md')}`);
+
+  if (!skipExport) {
+    const exported = await exportReport(runDir, data, template, logos, pluginRoot);
+    if (exported.pdf !== null) console.log(`pdf: ${link(exported.pdf)}`);
+    if (exported.standalone !== null) console.log(`standalone: ${link(exported.standalone)}`);
+    if (exported.warning !== null) {
+      console.error(`warning: ${exported.warning}`);
+      writeFileSync(join(runDir, 'report.html'), renderReport(template, { ...data, exports: {} }, logos));
+    }
+  }
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main();
+  await main();
 }

@@ -72,7 +72,7 @@ describe('sweep', () => {
 
     spawnSync(
       process.execPath,
-      [join(import.meta.dirname, '../../scripts/report.mjs'), result.folder],
+      [join(import.meta.dirname, '../../scripts/report.mjs'), result.folder, '--no-export'],
       { encoding: 'utf8' },
     );
     const summary = readFileSync(join(result.folder, 'summary.md'), 'utf8');

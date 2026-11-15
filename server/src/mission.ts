@@ -1,4 +1,5 @@
 import type { Page } from 'playwright';
+import { saveLogin } from './auth.js';
 import type { Session } from './sessions.js';
 import type { Mission, SuccessRule } from './types.js';
 
@@ -91,10 +92,36 @@ export async function evaluate(
   session: Session,
   end: (outcome: 'success' | 'limit', reason: string) => Promise<void>,
 ): Promise<string | null> {
-  const met = await checkSuccess(session.page, session.mission.success);
+  let prefix = '';
+  const login = session.auth.loginMission;
+  if (session.auth.phase === 'login' && login !== undefined) {
+    const signedIn = await checkSuccess(session.page, login.success);
+    if (signedIn !== null) {
+      session.auth.phase = 'mission';
+      session.writer.log(session, `signed in: ${signedIn}`);
+      await session.page
+        .goto(new URL(session.mission.start_url, session.baseUrl).toString(), {
+          waitUntil: 'domcontentloaded',
+        })
+        .catch(() => undefined);
+      prefix = `You are signed in. The browser has moved on to the start of your mission: ${session.mission.goal.trim()}`;
+    }
+  }
+
+  const met =
+    session.auth.phase === 'mission'
+      ? await checkSuccess(session.page, session.mission.success)
+      : null;
   if (met !== null) {
+    const saved = await saveLogin(session);
+    if (saved !== null) session.writer.log(session, `saved login to ${saved}`);
     await end('success', `mission success: ${met}`);
-    return `Mission complete (${met}). The session has ended: call finish with your journal.`;
+    const done = `Mission complete (${met}).${saved === null ? '' : ' The login has been saved.'} The session has ended: call finish with your journal.`;
+    return prefix === '' ? done : `${prefix}\n\n${done}`;
+  }
+
+  if (prefix !== '') {
+    return `${prefix} Look at the screen to carry on.`;
   }
 
   const limit = limitReached(session);

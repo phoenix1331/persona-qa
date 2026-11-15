@@ -88,7 +88,7 @@ function project(): { root: string; run: (id: string, known?: string) => string 
         ],
       }),
     );
-    node('report.mjs', runDir);
+    node('report.mjs', runDir, '--no-export');
     return runDir;
   };
 
@@ -103,7 +103,7 @@ describe('triage.mjs', () => {
     const dismissed = JSON.parse(
       node('triage.mjs', 'dismiss', first, 'ISSUE-2', 'Brand colours, accepted').stdout,
     ) as { key: string };
-    node('report.mjs', first);
+    node('report.mjs', first, '--no-export');
 
     expect(dismissed.key).toBe('footer-text-has-low-contrast');
     const triage = JSON.parse(readFileSync(join(root, '.personaqa', 'triage.json'), 'utf8')) as {

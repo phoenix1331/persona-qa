@@ -1,7 +1,7 @@
 ---
 description: Opens or rebuilds a PersonaQA run report, records confirm or dismiss decisions on findings (remembered across runs), and files confirmed findings as GitHub issues. Use for "/personaqa:report", "dismiss ISSUE-3", "file the findings to GitHub".
-argument-hint: "[run-id] | confirm ISSUE-n... | dismiss ISSUE-n \"reason\" | file [ISSUE-n...] [--yes]"
-allowed-tools: Read, Glob, AskUserQuestion, Bash(node *), Bash(gh issue *), Bash(gh label *)
+argument-hint: "[run-id] | open | export | confirm ISSUE-n... | dismiss ISSUE-n \"reason\" | file [ISSUE-n...] [--yes]"
+allowed-tools: Read, Glob, AskUserQuestion, Bash(node *), Bash(gh issue *), Bash(gh label *), Bash(open *), Bash(xdg-open *), Bash(wslview *), Bash(explorer.exe *), Bash(cmd.exe /c start *)
 ---
 
 # PersonaQA report
@@ -10,10 +10,24 @@ Arguments: `$ARGUMENTS`
 
 The run folder is the newest folder in `.personaqa/runs/` that has `run.json` session files, unless the arguments start with a run id. All helpers live in `${CLAUDE_PLUGIN_ROOT}/scripts/`. Decisions are stored in `.personaqa/triage.json`; tell the user to commit it so the whole team shares them.
 
-## Open (no sub-command, or only a run id)
+## Show (no sub-command, or only a run id)
 
-1. If the folder has no `report.html`, or `findings.json` is newer than it, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" "<run folder>"`.
-2. Reply with `summary.md`, the path to `report.html`, and the commands below in one short list.
+1. If the folder has no `report.html`, or `findings.json` is newer than it, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" "<run folder>"`. It prints `file://` links for the report, the PDF and the standalone copy.
+2. Reply with `summary.md`, those links, and the commands below in one short list.
+
+## open
+
+Open `report.html` in the user's browser with the first command that exists: `open <file>` on macOS, `wslview <file>` or `explorer.exe "$(wslpath -w <file>)"` under WSL, `xdg-open <file>` on Linux, `cmd.exe /c start "" <file>` on Windows. If none works, give the `file://` link instead.
+
+## export
+
+Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" "<run folder>"` and reply with the links it prints:
+
+- `report.pdf`: every section expanded, for printing or attaching to a ticket
+- `report-standalone.html`: one file with the screenshots embedded, safe to email or upload anywhere
+- `report.html`: the interactive report, which also has Download PDF and Standalone HTML buttons
+
+Sharing the whole run folder (zip `.personaqa/runs/<run id>/`) also shares journals, traces and every screenshot.
 
 ## confirm ISSUE-n...
 

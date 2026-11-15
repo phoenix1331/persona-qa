@@ -20,7 +20,7 @@ export interface Config {
     strategy: 'none' | 'storage_state' | 'login_mission';
     storage_state?: string;
     login_mission?: string;
-    accounts: Record<string, { email: string; password: string }>;
+    accounts: Record<string, { email: string; password: string; storage_state?: string }>;
   };
   runner: {
     max_parallel: number;

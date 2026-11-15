@@ -135,6 +135,10 @@ export function createServer(sessions: SessionManager): McpServer {
         persona: z.string().describe('Persona id, e.g. james'),
         mission: z.string().describe('Mission id, e.g. checkout'),
         base_url: z.string().optional().describe('Overrides app.base_url, e.g. a preview deploy'),
+        save_login: z
+          .boolean()
+          .optional()
+          .describe('For /personaqa:auth: save the login when the mission succeeds'),
         run_id: z
           .string()
           .regex(/^[A-Za-z0-9T:._-]+$/)
@@ -142,11 +146,12 @@ export function createServer(sessions: SessionManager): McpServer {
           .describe('Shared id so parallel sessions write into one run folder'),
       },
     },
-    async ({ persona, mission, base_url, run_id }) =>
+    async ({ persona, mission, base_url, run_id, save_login }) =>
       respond(async () => {
         const session = await sessions.start(persona, mission, {
           ...(base_url === undefined ? {} : { baseUrl: base_url }),
           ...(run_id === undefined ? {} : { runId: run_id.replaceAll(':', '-') }),
+          ...(save_login === true ? { saveLogin: true } : {}),
         });
         await rideAlong(session);
         const ended = await evaluate(session, async (outcome, reason) =>
@@ -420,9 +425,16 @@ export function brief(session: Session): string {
   const traits = Object.entries(persona.traits)
     .map(([key, value]) => `- ${key.replaceAll('_', ' ')}: ${String(value)}`)
     .join('\n');
-  const data = Object.entries(mission.data ?? {})
+  const credentials = session.auth.credentials;
+  const data = Object.entries({
+    ...(credentials === undefined
+      ? {}
+      : { 'your email': credentials.email, 'your password': credentials.password }),
+    ...(mission.data ?? {}),
+  })
     .map(([key, value]) => `- ${key}: ${String(value)}`)
     .join('\n');
+  const login = session.auth.phase === 'login' ? session.auth.loginMission : undefined;
 
   return [
     `Session: ${session.id}`,
@@ -440,6 +452,9 @@ export function brief(session: Session): string {
       : '',
     '',
     '## Your mission',
+    login === undefined
+      ? ''
+      : `First you need to sign in: ${login.goal.trim()} The browser will tell you when you are signed in.\n\nThen:`,
     mission.goal.trim(),
     mission.context === undefined ? '' : `\n${mission.context.trim()}`,
     data === '' ? '' : `\nDetails you have to hand:\n${data}`,

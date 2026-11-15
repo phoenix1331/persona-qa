@@ -69,8 +69,16 @@ Wait for them before the coordinator.
 
 Start one `personaqa:coordinator` subagent with the prompt `Run folder: .personaqa/runs/<run_id>/`. It merges the issues into ranked findings and writes `summary.md` and `report.html`.
 
-Then read `.personaqa/runs/<run_id>/summary.md` and reply with its contents, followed by the path to `report.html` and a note that each session folder holds `journal.md`, screenshots and (per config) a Playwright trace (`npx playwright show-trace <path>/trace.zip`).
+Then read `.personaqa/runs/<run_id>/summary.md` and reply with its contents, followed by a short **Report** block using the `file://` links the coordinator returned (they are clickable in most terminals):
 
-If the coordinator fails, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" .personaqa/runs/<run_id>/` yourself (it reports unmerged issues) and say that the findings were not merged.
+```
+Report:     file:///.../report.html
+PDF:        file:///.../report.pdf
+Standalone: file:///.../report-standalone.html   (one file, screenshots embedded, safe to email)
+```
+
+End with one line: `Open it with /personaqa:report open, or confirm, dismiss and file findings with /personaqa:report.` Mention that each session folder also holds `journal.md`, screenshots and (per config) a Playwright trace (`npx playwright show-trace <path>/trace.zip`).
+
+If the coordinator fails, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" .personaqa/runs/<run_id>/` yourself (it reports unmerged issues and prints the links) and say that the findings were not merged.
 
 Outcomes come only from `run.json`, never from your own judgement.

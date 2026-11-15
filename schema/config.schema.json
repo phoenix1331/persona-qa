@@ -5,15 +5,28 @@
   "description": "The .personaqa/config.yaml file in an app repository.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "app"],
+  "required": [
+    "version",
+    "app"
+  ],
   "properties": {
-    "version": { "const": 1, "description": "Config format version." },
+    "version": {
+      "const": 1,
+      "description": "Config format version."
+    },
     "app": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "base_url", "allowed_domains"],
+      "required": [
+        "name",
+        "base_url",
+        "allowed_domains"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
         "base_url": {
           "type": "string",
           "pattern": "^https?://[^\\s/]+(/.*)?$",
@@ -24,7 +37,10 @@
           "minItems": 1,
           "uniqueItems": true,
           "description": "Host names (optionally with :port) the browser may load. Everything else is refused.",
-          "items": { "type": "string", "pattern": "^(\\*\\.)?[A-Za-z0-9.-]+(:\\d+)?$" }
+          "items": {
+            "type": "string",
+            "pattern": "^(\\*\\.)?[A-Za-z0-9.-]+(:\\d+)?$"
+          }
         }
       }
     },
@@ -32,30 +48,80 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "strategy": { "enum": ["none", "storage_state", "login_mission"], "default": "none" },
-        "storage_state": { "type": "string", "description": "Path to a Playwright storage state JSON file." },
-        "login_mission": { "type": "string", "description": "Mission id that signs in before the real mission." },
+        "strategy": {
+          "enum": [
+            "none",
+            "storage_state",
+            "login_mission"
+          ],
+          "default": "none"
+        },
+        "storage_state": {
+          "type": "string",
+          "description": "Path to a Playwright storage state JSON file (a saved login), relative to the repository. Create it with /personaqa:auth."
+        },
+        "login_mission": {
+          "type": "string",
+          "description": "Mission id that signs in. Personas do it first, then continue with their real mission."
+        },
         "accounts": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["email", "password"],
+            "required": [
+              "email",
+              "password"
+            ],
             "properties": {
-              "email": { "type": "string" },
-              "password": { "type": "string" }
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "storage_state": {
+                "type": "string",
+                "description": "Saved login (Playwright storage state) for this account. Defaults to auth.storage_state, or .personaqa/auth/<account>.json when created by /personaqa:auth."
+              }
             }
           }
         }
       },
       "allOf": [
         {
-          "if": { "properties": { "strategy": { "const": "storage_state" } }, "required": ["strategy"] },
-          "then": { "required": ["storage_state"] }
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "storage_state"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "required": [
+              "storage_state"
+            ]
+          }
         },
         {
-          "if": { "properties": { "strategy": { "const": "login_mission" } }, "required": ["strategy"] },
-          "then": { "required": ["login_mission"] }
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "login_mission"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "required": [
+              "login_mission"
+            ]
+          }
         }
       ]
     },
@@ -63,48 +129,121 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "max_parallel": { "type": "integer", "minimum": 1, "maximum": 10, "default": 3 },
-        "max_steps_per_run": { "type": "integer", "minimum": 1, "maximum": 500, "default": 60 },
-        "max_minutes_per_run": { "type": "number", "exclusiveMinimum": 0, "maximum": 60, "default": 8 },
-        "model": { "type": "string", "description": "Model for persona runners, e.g. sonnet or haiku." }
+        "max_parallel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3
+        },
+        "max_steps_per_run": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 60
+        },
+        "max_minutes_per_run": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 60,
+          "default": 8
+        },
+        "model": {
+          "type": "string",
+          "description": "Model for persona runners, e.g. sonnet or haiku."
+        }
       }
     },
     "personas": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": { "$ref": "#/$defs/selection" },
-        "paths": { "type": "array", "items": { "type": "string" }, "default": [".personaqa/personas"] }
+        "enabled": {
+          "$ref": "#/$defs/selection"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".personaqa/personas"
+          ]
+        }
       }
     },
     "missions": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "paths": { "type": "array", "items": { "type": "string" }, "default": [".personaqa/missions"] }
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".personaqa/missions"
+          ]
+        }
       }
     },
     "output": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "dir": { "type": "string", "default": ".personaqa/runs" },
-        "screenshots": { "enum": ["every_action", "on_issue", "off"], "default": "on_issue" },
-        "trace": { "enum": ["always", "on_failure", "off"], "default": "on_failure" },
-        "regression_tests": { "enum": ["off", "suggest", "write"], "default": "suggest" }
+        "dir": {
+          "type": "string",
+          "default": ".personaqa/runs"
+        },
+        "screenshots": {
+          "enum": [
+            "every_action",
+            "on_issue",
+            "off"
+          ],
+          "default": "on_issue"
+        },
+        "trace": {
+          "enum": [
+            "always",
+            "on_failure",
+            "off"
+          ],
+          "default": "on_failure"
+        },
+        "regression_tests": {
+          "enum": [
+            "off",
+            "suggest",
+            "write"
+          ],
+          "default": "suggest"
+        }
       }
     },
     "issues": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "sink": { "enum": ["file", "github"], "default": "file" },
+        "sink": {
+          "enum": [
+            "file",
+            "github"
+          ],
+          "default": "file"
+        },
         "github": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "labels": { "type": "array", "items": { "type": "string" } },
-            "min_severity": { "$ref": "#/$defs/severity" }
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "min_severity": {
+              "$ref": "#/$defs/severity"
+            }
           }
         }
       }
@@ -115,10 +254,17 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["personas", "missions"],
+        "required": [
+          "personas",
+          "missions"
+        ],
         "properties": {
-          "personas": { "$ref": "#/$defs/selection" },
-          "missions": { "$ref": "#/$defs/selection" }
+          "personas": {
+            "$ref": "#/$defs/selection"
+          },
+          "missions": {
+            "$ref": "#/$defs/selection"
+          }
         }
       }
     },
@@ -130,32 +276,87 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "enabled": { "type": "boolean", "default": true },
-            "standard": { "enum": ["wcag21", "wcag22"], "default": "wcag22" },
-            "level": { "enum": ["A", "AA", "AAA"], "default": "AA" },
-            "mode": { "enum": ["ride_along", "sweep", "both"], "default": "ride_along" },
-            "ignore": { "type": "array", "items": { "type": "string" } }
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "standard": {
+              "enum": [
+                "wcag21",
+                "wcag22"
+              ],
+              "default": "wcag22"
+            },
+            "level": {
+              "enum": [
+                "A",
+                "AA",
+                "AAA"
+              ],
+              "default": "AA"
+            },
+            "mode": {
+              "enum": [
+                "ride_along",
+                "sweep",
+                "both"
+              ],
+              "default": "ride_along"
+            },
+            "ignore": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         },
         "ux": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "enabled": { "type": "boolean", "default": true },
-            "heuristics": { "enum": ["nielsen"], "default": "nielsen" }
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "heuristics": {
+              "enum": [
+                "nielsen"
+              ],
+              "default": "nielsen"
+            }
           }
         }
       }
     }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
     "selection": {
       "oneOf": [
-        { "const": "all" },
-        { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }
+        {
+          "const": "all"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
       ]
     },
-    "severity": { "enum": ["low", "medium", "high", "critical"] }
+    "severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    }
   }
 }

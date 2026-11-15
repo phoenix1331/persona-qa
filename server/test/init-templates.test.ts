@@ -26,6 +26,15 @@ describe('init templates', () => {
     expect(validate('config', config).issues).toEqual([]);
   });
 
+  it('produce a valid login mission once filled', () => {
+    expect(
+      validate(
+        'mission',
+        fill('missions/login.yaml', { LOGIN_PATH: '/login', SIGNED_IN_PATH: '/account' }),
+      ).issues,
+    ).toEqual([]);
+  });
+
   it('produce a valid starter mission once filled', () => {
     expect(
       validate('mission', fill('missions/first-visit.yaml', { SUCCESS_PATH: '/signup/complete' }))

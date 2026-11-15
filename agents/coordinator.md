@@ -67,4 +67,4 @@ Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/report.mjs" "<run folder>"`. If it prin
 
 ## 5. Reply
 
-Reply with the contents of `summary.md`, then one line with the path to `report.html`. Nothing else.
+The renderer also writes `report.pdf` and `report-standalone.html` (screenshots embedded) and prints a `file://` link for each. Reply with the contents of `summary.md`, then those links exactly as printed. Nothing else.

@@ -57,6 +57,20 @@
   code { background: var(--chip); padding: 1px 5px; border-radius: 4px; }
   .empty { color: var(--muted); padding: 24px; text-align: center; }
   footer { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 24px; }
+  .export { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .export a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.9rem; background: var(--bg); }
+  .export a.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .print-section { margin-top: 28px; }
+  .print-section > h2 { font-size: 1.3rem; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+  @media print {
+    :root { --bg: #fff; }
+    header { padding: 0 0 12px; }
+    .export, nav.tabs, .filters { display: none !important; }
+    main { padding: 0; max-width: none; }
+    .card, .tile, table { break-inside: avoid; }
+    details > summary { display: none; }
+    .shots img { height: 120px; }
+  }
   @media (max-width: 640px) { header img { height: 36px; } th:nth-child(n+5), td:nth-child(n+5) { display: none; } }
 </style>
 </head>
@@ -70,6 +84,7 @@
     <h1 id="title"></h1>
     <div class="meta" id="meta"></div>
   </div>
+  <div class="export" id="export"></div>
 </header>
 <main>
   <section class="tiles" id="tiles" aria-label="Run totals"></section>
@@ -93,9 +108,17 @@
     return node;
   };
   const badge = (severity) => el('span', { class: `badge ${severity}`, text: severity });
-  const shot = (session, path) => path ? el('a', { href: `${session}/${path}`, target: '_blank' }, el('img', { src: `${session}/${path}`, alt: `Screenshot from ${session}`, loading: 'lazy' })) : null;
+  const source = (session, path) => data.images?.[`${session}/${path}`] ?? `${session}/${path}`;
+  const shot = (session, path) => path ? el('a', { href: source(session, path), target: '_blank' }, el('img', { src: source(session, path), alt: `Screenshot from ${session}`, loading: data.images ? 'eager' : 'lazy' })) : null;
 
   document.getElementById('title').textContent = `${data.app} - persona run`;
+  const exportBar = document.getElementById('export');
+  if (data.standalone) {
+    exportBar.append(el('span', { class: 'muted', text: 'Standalone copy: screenshots are embedded' }));
+  } else {
+    if (data.exports?.pdf) exportBar.append(el('a', { class: 'primary', href: data.exports.pdf, download: '', text: 'Download PDF' }));
+    if (data.exports?.standalone) exportBar.append(el('a', { href: data.exports.standalone, download: '', text: 'Standalone HTML' }));
+  }
   document.getElementById('meta').textContent = `Run ${data.run_id} · ${data.generated_at.slice(0, 16).replace('T', ' ')} · ${data.base_url}`;
 
   const counts = (key) => data.sessions.filter((session) => session.outcome === key).length;
@@ -201,6 +224,19 @@
     document.getElementById('panel').replaceChildren(tabs.find(([id]) => id === current)[2]());
   }
   render();
+
+  // Used for the PDF export: every section, expanded, one after another.
+  window.personaqaPrint = () => {
+    const panel = document.getElementById('panel');
+    state.severities = new Set(SEVERITIES);
+    state.persona = 'all';
+    panel.replaceChildren(...tabs.map(([, label, view]) => {
+      const section = el('section', { class: 'print-section' }, el('h2', { text: label }), view());
+      section.querySelectorAll('details').forEach((details) => { details.open = true; });
+      return section;
+    }));
+    document.querySelectorAll('img').forEach((image) => { image.loading = 'eager'; });
+  };
 })();
 </script>
 </body>

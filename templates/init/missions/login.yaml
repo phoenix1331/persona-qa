@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/phoenix1331/persona-qa/main/schema/mission.schema.json
+# Signs in. Used by /personaqa:auth to save a login, or by auth.strategy: login_mission so personas sign in first.
+id: login
+goal: Sign in with your account details.
+start_url: {{LOGIN_PATH}}
+time_limit_minutes: 3
+account: default
+success:
+  any:
+    - url_contains: {{SIGNED_IN_PATH}}
+context: >
+  The account already exists. Use the email and password you have been given.

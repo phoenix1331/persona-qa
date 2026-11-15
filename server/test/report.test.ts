@@ -64,7 +64,7 @@ function render(runDir: string): {
   status: number | null;
   stderr: string;
 } {
-  const result = spawnSync(process.execPath, [script, runDir], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, [script, runDir, '--no-export'], { encoding: 'utf8' });
   const html = readFileSync(join(runDir, 'report.html'), 'utf8');
   const json =
     /<script type="application\/json" id="data">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}';
@@ -206,5 +206,35 @@ describe('inspector tabs', () => {
     ]);
     expect(data['ux']).toBeNull();
     expect(summary).toContain('Accessibility inspector: 2 findings, 1 high or critical.');
+  });
+});
+
+describe('exports', () => {
+  it('writes a PDF and a standalone HTML with embedded screenshots, linked from the report', () => {
+    const runDir = fixture(sessions);
+    for (const dir of ['james--checkout', 'margaret--checkout']) {
+      // A real 1x1 JPEG so the downscaler can decode it
+      writeFileSync(
+        join(runDir, dir, 'screenshots', '001-final.jpg'),
+        Buffer.from(
+          '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=',
+          'base64',
+        ),
+      );
+    }
+
+    const result = spawnSync(process.execPath, [script, runDir], { encoding: 'utf8' });
+
+    expect(result.stdout).toMatch(/^pdf: file:\/\/.*report\.pdf$/m);
+    expect(result.stdout).toMatch(/^standalone: file:\/\/.*report-standalone\.html$/m);
+    expect(readFileSync(join(runDir, 'report.pdf')).subarray(0, 4).toString()).toBe('%PDF');
+    const standalone = readFileSync(join(runDir, 'report-standalone.html'), 'utf8');
+    expect(standalone).toContain('"standalone":true');
+    expect(standalone).toMatch(
+      /"james--checkout\/screenshots\/001-final\.jpg":"data:image\/jpeg;base64,/,
+    );
+    expect(readFileSync(join(runDir, 'report.html'), 'utf8')).toContain(
+      '"exports":{"pdf":"report.pdf","standalone":"report-standalone.html"}',
+    );
   });
 });
