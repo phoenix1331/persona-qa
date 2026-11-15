@@ -127,7 +127,7 @@ describe('run folder', () => {
 
 describe('helpers', () => {
   it('makes file-safe run ids from timestamps', () => {
-    expect(newRunId(new Date('2026-11-14T21:50:33Z'))).toBe('2026-11-14T21-50');
+    expect(newRunId(new Date('2026-11-14T21:50:33Z'))).toBe('2026-11-14T21-50-33');
   });
 
   it('resolves run folders against the project unless absolute', () => {

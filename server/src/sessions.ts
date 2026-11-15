@@ -143,6 +143,11 @@ export class SessionManager {
     return session;
   }
 
+  /** A fresh loader for read-only work such as planning and validation. */
+  loader(): Loader {
+    return this.options.loader();
+  }
+
   get(id: string): Session {
     const session = this.sessions.get(id);
     if (session === undefined) {

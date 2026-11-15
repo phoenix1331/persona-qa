@@ -15,7 +15,7 @@ export interface Issue {
 }
 
 export function newRunId(now = new Date()): string {
-  return now.toISOString().slice(0, 16).replace(':', '-');
+  return now.toISOString().slice(0, 19).replaceAll(':', '-');
 }
 
 export function runDirFor(

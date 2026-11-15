@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { type ActionResult, KEYS, back, pressKey, scroll, tap, type } from './actions.js';
 import { PersonaQAError } from './errors.js';
 import { evaluate, limitReached, patienceNotice } from './mission.js';
+import { resolveEnvironment } from './environment.js';
+import { plan } from './plan.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
 import { takeSnapshot } from './snapshot.js';
@@ -13,6 +15,42 @@ export function createServer(sessions: SessionManager): McpServer {
     instructions:
       'PersonaQA browser. Call start_session with a persona and mission, then act as that person using only these tools. Call finish with your journal when the session ends.',
   });
+
+  server.registerTool(
+    'plan_run',
+    {
+      title: 'Plan a PersonaQA run',
+      description:
+        'For the orchestrating session, not personas. Validates config, personas and missions and returns the persona x mission pairs to run, a shared run_id, base_url and max_parallel as JSON.',
+      inputSchema: {
+        personas: z
+          .string()
+          .optional()
+          .describe('"all", comma-separated ids, or omit for config personas.enabled'),
+        missions: z
+          .string()
+          .optional()
+          .describe('"all", comma-separated ids, or omit for all missions'),
+        set: z.string().optional().describe('Named run set from config ci, e.g. pull_request'),
+        base_url: z.string().optional(),
+      },
+    },
+    async (input) =>
+      respond(async () => {
+        const loader = sessions.loader();
+        const result = plan(
+          loader,
+          {
+            ...(input.personas === undefined ? {} : { personas: input.personas }),
+            ...(input.missions === undefined ? {} : { missions: input.missions }),
+            ...(input.set === undefined ? {} : { set: input.set }),
+            ...(input.base_url === undefined ? {} : { base_url: input.base_url }),
+          },
+          (id) => resolveEnvironment(loader.persona(id).environment).description,
+        );
+        return JSON.stringify(result, null, 2);
+      }),
+  );
 
   server.registerTool(
     'start_session',
