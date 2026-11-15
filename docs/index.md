@@ -20,7 +20,7 @@ PersonaQA is a Claude Code plugin that gives your app a cast of simulated users.
 
 ![A persona buying a ticket, then the ranked report](media/walkthrough.gif)
 
-On a demo shop with 15 deliberately planted flaws, one run of the five built-in personas found 13 of them for about $1.50.
+On a demo shop with 15 deliberately planted flaws, one run of the five built-in personas found 13 of them. That run would cost about $1.50 at API rates with Sonnet; on a Pro or Max plan it uses your plan's allowance instead. See [Cost and usage](cost.md).
 
 ## How it fits together
 
@@ -37,6 +37,7 @@ On a demo shop with 15 deliberately planted flaws, one run of the five built-in 
 | Add my own personas or change the built-in ones | [Personas](personas.md) |
 | Test pages behind a login | [Logins](authentication.md) |
 | Understand and share the results | [Reading the results](reporting.md) |
+| Know what runs cost, on a plan or an API key | [Cost and usage](cost.md) |
 | Run it on every pull request | [CI with GitHub Actions](github-actions.md) |
 | Look up a config setting | [Configuration reference](configuration.md) |
 | Fix something that is not working | [Troubleshooting](troubleshooting.md) |

@@ -74,7 +74,7 @@ A few lines for a pull request comment or a chat message: how many personas reac
 
 The coordinator merges issues from every persona into findings: "Pay hidden under the cookie banner" and "couldn't find the Pay button" from two different people become one problem. Findings are ranked by severity multiplied by the number of personas affected, with a boost when a persona failed or gave up because of it. Filter by severity or by persona to see, for example, only what Priya (keyboard only) ran into.
 
-The tiles at the top count sessions, outcomes and findings. The token tile is what Claude Code reported for the persona runners; the billed cost of a run is in your usage page or `claude -p --output-format json`.
+The tiles at the top count sessions, outcomes and findings. The token tile is what Claude Code reported for the persona runners; for the cost of a run, see [Cost and usage](cost.md).
 
 ### Evidence
 

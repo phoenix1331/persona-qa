@@ -20,6 +20,6 @@ nav_order: 10
 | A finding is wrong or accepted | `/personaqa:report dismiss ISSUE-n "reason"`; later runs hide it |
 | The report has no Download PDF button | Exporting needs the plugin's browser. Run `/personaqa:report export` to see the error |
 | Emoji show as boxes in screenshots | The headless browser has no emoji font. It does not affect what personas do or see in text |
-| Runs cost more than expected | Use fewer personas on pull requests, `runner.model: haiku`, lower `max_steps_per_run`, and `screenshots: on_issue`. The billed cost is `total_cost_usd` in `claude -p --output-format json` |
+| Runs cost more than expected | Use fewer personas on pull requests, `runner.model: haiku`, lower `max_steps_per_run`, and `screenshots: on_issue`. `total_cost_usd` in `claude -p --output-format json` is the API-rate cost; on a Pro or Max plan runs use your allowance instead. See [Cost and usage](cost.md) |
 
 Still stuck? Open an issue on [GitHub](https://github.com/phoenix1331/persona-qa/issues) with the run's `run.json` and `actions.log` (remove anything sensitive first).

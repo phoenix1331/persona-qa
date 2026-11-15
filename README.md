@@ -22,7 +22,7 @@ A small ticket shop was built with 15 deliberate flaws (a cookie banner that hid
 | Planted flaws found | **13 of 15** (8 of 9 usability, 5 of 6 accessibility) |
 | Missed | The two flaws on pages the checkout mission never visits (sign-in and the date filter) |
 | Personas | Five, run in parallel; four reached the goal, Priya (keyboard only, no visible focus) ran out of steps |
-| Billed cost | About $1.50 with Sonnet, including both inspectors and the coordinator |
+| Cost | About $1.50 at API rates with Sonnet, including both inspectors and the coordinator. Measured with Claude Code's `total_cost_usd`; it varies with the model and the app, and on a Pro or Max plan runs use your plan's allowance instead of being billed. [How this was measured](docs/cost.md) |
 
 Margaret's journal from that run ([the full session](docs/sample-journal.md)):
 
@@ -74,7 +74,7 @@ In your app's repository:
 
 The first session downloads a headless Chromium (about 290 MB) in the background. Point PersonaQA at staging, preview or local deploys only: personas fill in forms and pay with test cards.
 
-**Documentation:** the [guide](https://phoenix1331.github.io/persona-qa/) walks through [getting started](docs/getting-started.md), writing [missions](docs/missions.md), adding and configuring [personas](docs/personas.md), testing behind a [login](docs/authentication.md), [reading and exporting results](docs/reporting.md), [CI](docs/github-actions.md) and the [configuration reference](docs/configuration.md).
+**Documentation:** the [guide](https://phoenix1331.github.io/persona-qa/) walks through [getting started](docs/getting-started.md), writing [missions](docs/missions.md), adding and configuring [personas](docs/personas.md), testing behind a [login](docs/authentication.md), [reading and exporting results](docs/reporting.md), [cost and usage](docs/cost.md), [CI](docs/github-actions.md) and the [configuration reference](docs/configuration.md).
 
 ## Commands
 
@@ -131,7 +131,7 @@ Example workflows run a small persona set on every pull request (posting `summar
 
 ## Cost and limits
 
-- **Cost.** A persona run is a loop of look and act, so input tokens dominate. The levers are built in: compact snapshots of the visible screen only, diffs instead of repeated pages, screenshots only when asked, hard step and time limits, small sets on pull requests and the full cast nightly, and deterministic code wherever possible (axe scans, success checks and timing cost nothing in model calls).
+- **Cost.** A persona run is a loop of look and act, so input tokens dominate. The levers are built in: compact snapshots of the visible screen only, diffs instead of repeated pages, screenshots only when asked, hard step and time limits, small sets on pull requests and the full cast nightly, and deterministic code wherever possible (axe scans, success checks and timing cost nothing in model calls). Dollar figures here are API-rate measurements with Sonnet; see [Cost and usage](docs/cost.md) for how they were measured, how the model changes them, and what they mean on a Pro or Max plan.
 - **Non-determinism.** The same persona takes different paths on different runs. That is the point for exploration, so never use a run as a pass/fail gate; confirmed findings become deterministic tests instead.
 - **False positives.** The coordinator merges duplicates and applies explicit severity rules, and a person confirms before anything becomes a test or an issue.
 - **Coverage follows missions.** Personas only find what their missions lead them to; two of the demo's misses were on pages checkout never visits.

@@ -35,7 +35,7 @@ See [Logins](authentication.md).
 | `max_parallel` | 3 | Personas running at once (1 to 10) |
 | `max_steps_per_run` | 60 | Actions before a session ends as `limit`. A mission's `max_steps` overrides it |
 | `max_minutes_per_run` | 8 | Minutes before a session ends as `limit`. A mission's `time_limit_minutes` overrides it |
-| `model` | `sonnet` | Model for persona runners, for example `haiku` to cut cost |
+| `model` | `sonnet` | Model for persona runners, for example `haiku` to cut cost. See [Cost and usage](cost.md) |
 
 ## personas and missions
 

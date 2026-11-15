@@ -15,7 +15,7 @@ Before writing any server code, James (23, phone, patchy signal, impatient) was 
 | Outcome (self-reported) | Success, reached `/order/confirmed` |
 | Turns / wall time | 18 / 49s |
 | Tokens | 41.7K cache write, 431.6K cache read, 3.3K output |
-| Cost | $0.24 |
+| Cost (API rates, Sonnet, from `total_cost_usd`) | $0.24 |
 | Largest single tool result | 45.6K characters (seat map snapshot: 240 seat links) |
 | Issues reported | 11 |
 | Planted flaws clearly found | 7 of 15 (cookie banner, idiom errors, form clears, hidden fee, US dates, spaced card number, crest alt text) |
@@ -56,7 +56,7 @@ James was run again through the same mission from a plain `claude -p` session wi
 | Environment | 390x844 viewport only | iPhone 15, touch, slow 3G (2s latency), en-GB, Europe/London |
 | Outcome | "Success", claimed by the agent | Abandoned (`incomplete`), decided by the server |
 | Turns / wall time | 18 / 49s | 18 / 86s |
-| Cost | $0.24 | $0.14 |
+| Cost (API rates, Sonnet, from `total_cost_usd`) | $0.24 | $0.14 |
 | Tokens | 41.7K cache write, 431.6K cache read | 21.2K cache write, 293.4K cache read |
 | Seat map snapshot | 45.6K characters | about 2K characters per screen |
 | Address bar shortcut | Used (`/checkout?seat=242`) | Not possible |

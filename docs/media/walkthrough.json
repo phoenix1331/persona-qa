@@ -13,6 +13,6 @@
     { "image": "report-findings.jpg", "step": "The report", "label": "report.html", "caption": "The coordinator merges all five personas' issues into ranked findings.", "seconds": 3.5 },
     { "image": "report-evidence.jpg", "step": "Evidence", "label": "report.html", "caption": "Every finding shows who hit it, at which step, with their screenshots.", "seconds": 3 },
     { "image": "report-accessibility.jpg", "step": "Accessibility", "label": "report.html", "caption": "Inspectors add WCAG findings, ranked higher when a persona actually suffered.", "seconds": 3 },
-    { "outro": true, "title": "13 of 15 planted flaws found", "lines": ["Five personas, one command, about $1.50", "Success decided by the server, never the persona", "Confirmed findings become Playwright tests"], "seconds": 4 }
+    { "outro": true, "title": "13 of 15 planted flaws found", "lines": ["Five personas, one command, about $1.50 at API rates", "Success decided by the server, never the persona", "Confirmed findings become Playwright tests"], "seconds": 4 }
   ]
 }
