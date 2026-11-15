@@ -13,7 +13,7 @@ import { recordIssue } from './issues.js';
 import { formatReport, validateProject } from './validate-project.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
-import { takeSnapshot } from './snapshot.js';
+import { describeRef, takeSnapshot } from './snapshot.js';
 
 export function createServer(sessions: SessionManager): McpServer {
   const server = new McpServer(serverInfo, {
@@ -184,11 +184,12 @@ export function createServer(sessions: SessionManager): McpServer {
   const act = (
     id: string,
     name: string,
-    detail: string,
+    detail: string | ((session: Session) => string),
     action: (session: Session) => Promise<ActionResult>,
   ) =>
     respond(async () => {
       const session = sessions.active(id);
+      const described = typeof detail === 'string' ? detail : detail(session);
       await beforeAction(session);
       const result = await action(session);
       session.steps += 1;
@@ -196,7 +197,7 @@ export function createServer(sessions: SessionManager): McpServer {
       session.longestWaitMs = Math.max(session.longestWaitMs, result.durationMs);
       session.writer.log(
         session,
-        `${name} ${detail} (${(result.durationMs / 1000).toFixed(1)}s) ${session.page.url()} :: ${result.summary}`,
+        `${name} ${described} (${(result.durationMs / 1000).toFixed(1)}s) ${session.page.url()} :: ${result.summary}`,
       );
       await session.writer.afterAction(session, name);
 
@@ -226,7 +227,13 @@ export function createServer(sessions: SessionManager): McpServer {
         'Taps (or clicks) the spot where a control is on screen. If something covers it, whatever is on top gets the tap. Returns the screen afterwards.',
       inputSchema: { session: z.string(), ref: z.string().describe('Ref from look, e.g. e12') },
     },
-    async ({ session, ref }) => act(session, 'tap', ref, (current) => tap(current, ref)),
+    async ({ session, ref }) =>
+      act(
+        session,
+        'tap',
+        (current) => withTarget(current, ref),
+        (current) => tap(current, ref),
+      ),
   );
 
   server.registerTool(
@@ -246,7 +253,8 @@ export function createServer(sessions: SessionManager): McpServer {
       act(
         session,
         'type',
-        `${ref} ${JSON.stringify(text)}${submit === true ? ' +Enter' : ''}`,
+        (current) =>
+          `${withTarget(current, ref)} ${JSON.stringify(text)}${submit === true ? ' +Enter' : ''}`,
         (current) => type(current, ref, text, submit === true),
       ),
   );
@@ -380,6 +388,11 @@ export function createServer(sessions: SessionManager): McpServer {
   );
 
   return server;
+}
+
+function withTarget(session: Session, ref: string): string {
+  const target = describeRef(session.snapshot, ref);
+  return target === null ? ref : `${ref} ${target}`;
 }
 
 export interface Reply {

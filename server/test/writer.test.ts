@@ -93,7 +93,9 @@ describe('run folder', () => {
     const log = readFileSync(join(dir, 'actions.log'), 'utf8');
     expect(log).toMatch(/step {3}0 {2}start james x checkout at http/);
     expect(log).toMatch(/step {3}0 {2}look/);
-    expect(log).toMatch(/step {3}1 {2}tap e\d+ \(\d\.\ds\) .*\/done :: You tapped e\d+\./);
+    expect(log).toMatch(
+      /step {3}1 {2}tap e\d+ link "Finish line" \(\d\.\ds\) .*\/done :: You tapped e\d+\./,
+    );
     expect(log).toMatch(/end success: mission success/);
     expect(log).toMatch(/finish success/);
   });

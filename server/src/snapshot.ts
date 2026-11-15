@@ -60,6 +60,16 @@ async function collect(page: Page, nextRef: number, attempts = 3): Promise<Scrip
   }
 }
 
+/** Role and name of a ref as the persona last saw it, e.g. 'button "Pay now"', for logs and generated tests. */
+export function describeRef(state: SnapshotState, ref: string): string | null {
+  const pattern = new RegExp(`\\[${ref} ([a-z]+) ("[^"]*"|\\(no name\\))`);
+  for (const line of state.previous?.lines ?? []) {
+    const match = pattern.exec(line);
+    if (match !== null) return `${match[1]} ${match[2]}`;
+  }
+  return null;
+}
+
 /** The whole page as lines, on screen or not, for inspectors. Shares the session's ref counter so refs stay unique. */
 export async function pageOutline(
   page: Page,

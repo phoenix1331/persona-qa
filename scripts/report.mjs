@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Renders summary.md and report.html for one run folder.
+// Renders summary.md, report.html and report.json (the same data, for other skills) for one run folder.
 // Usage: node scripts/report.mjs <run-dir>
 // Reads each session's run.json, issues.json and journal.md, plus optional findings.json (written by the
 // coordinator), usage.json (written by the run skill), a11y.json and ux.json. Ranking and cost are computed here,
@@ -249,6 +249,7 @@ function main() {
   const data = buildData(runDir, loadRun(runDir));
   const template = readFileSync(join(pluginRoot, 'templates', 'report.html'), 'utf8');
 
+  writeFileSync(join(runDir, 'report.json'), `${JSON.stringify(data, null, 2)}\n`);
   writeFileSync(join(runDir, 'report.html'), renderReport(template, data, { onLight: dataUri('logo-dark.webp'), onDark: dataUri('logo-light.webp') }));
   writeFileSync(join(runDir, 'summary.md'), summaryMarkdown(data, join(runDir, 'report.html')));
   console.log(`report: ${join(runDir, 'report.html')}`);
