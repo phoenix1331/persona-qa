@@ -9,6 +9,7 @@ import {
   resolveEnvironment,
 } from './environment.js';
 import { PersonaQAError } from './errors.js';
+import { type FiredEvent, type PlannedEvent, planEvents } from './events.js';
 import { playwright, setupMessage } from './playwright.js';
 import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
@@ -48,6 +49,8 @@ export interface Session {
   runId: string;
   writer: RunWriter;
   issues: Issue[];
+  plannedEvents: PlannedEvent[];
+  firedEvents: FiredEvent[];
 }
 
 export interface StartOptions {
@@ -122,8 +125,11 @@ export class SessionManager {
       runId,
       writer,
       issues: [],
+      plannedEvents: [],
+      firedEvents: [],
     };
 
+    session.plannedEvents = planEvents(session);
     await this.guard(session);
     await writer.startTrace(session);
     this.sessions.set(session.id, session);

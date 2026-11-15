@@ -6,6 +6,8 @@ import { PersonaQAError } from './errors.js';
 import { evaluate, limitReached, patienceNotice } from './mission.js';
 import { resolveEnvironment } from './environment.js';
 import { plan } from './plan.js';
+import { beforeAction } from './events.js';
+import { recordIssue } from './issues.js';
 import { formatReport, validateProject } from './validate-project.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
@@ -127,6 +129,7 @@ export function createServer(sessions: SessionManager): McpServer {
   ) =>
     respond(async () => {
       const session = sessions.active(id);
+      await beforeAction(session);
       const result = await action(session);
       session.steps += 1;
       session.lastActionMs = result.durationMs;
@@ -223,6 +226,56 @@ export function createServer(sessions: SessionManager): McpServer {
       inputSchema: { session: z.string() },
     },
     async ({ session }) => act(session, 'back', '', (current) => back(current)),
+  );
+
+  server.registerTool(
+    'record_issue',
+    {
+      title: 'Record an issue',
+      description:
+        'Logs a problem you hit, against the current step. The browser attaches a screenshot, the URL and the time. Record each distinct problem once, when it happens.',
+      inputSchema: {
+        session: z.string(),
+        title: z
+          .string()
+          .min(3)
+          .max(120)
+          .describe('Short, specific: "Pay button hidden under cookie banner"'),
+        severity: z
+          .enum(['low', 'medium', 'high', 'critical'])
+          .describe(
+            'critical: blocks the mission for everyone; high: blocked or nearly lost you; medium: slowed or confused you; low: annoyance',
+          ),
+        what_happened: z.string().min(3),
+        expected: z.string().min(3),
+      },
+    },
+    async ({ session: id, ...issue }) =>
+      respond(async () => {
+        const session = sessions.get(id);
+        if (session.journal !== undefined) {
+          throw new PersonaQAError(`Session ${id} is finished; issues can no longer be added.`);
+        }
+        const recorded = await recordIssue(session, issue);
+        return `Recorded ${recorded.id} (${recorded.severity}): ${recorded.title}${recorded.screenshot === undefined ? '' : ` with ${recorded.screenshot}`}.`;
+      }),
+  );
+
+  server.registerTool(
+    'give_up',
+    {
+      title: 'Give up',
+      description:
+        'Abandon the mission, as the person would. Say why in their words. Then call finish with your journal.',
+      inputSchema: { session: z.string(), reason: z.string().min(3) },
+    },
+    async ({ session: id, reason }) =>
+      respond(async () => {
+        const session = sessions.active(id);
+        sessions.end(session, 'abandoned', `gave up: ${reason}`);
+        session.writer.log(session, `give_up ${reason}`);
+        return 'You gave up. Call finish with your journal.';
+      }),
   );
 
   server.registerTool(

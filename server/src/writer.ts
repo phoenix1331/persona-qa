@@ -122,6 +122,7 @@ function runFacts(session: Session): Record<string, unknown> {
     base_url: session.baseUrl,
     final_url: session.page.isClosed() ? null : session.page.url(),
     issue_count: session.issues.length,
+    events: session.firedEvents,
     blocked_requests: session.blockedRequests,
     started_at: new Date(session.startedAt).toISOString(),
   };
