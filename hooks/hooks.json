@@ -1,5 +1,5 @@
 {
-  "description": "PersonaQA: install the browser on first run.",
+  "description": "PersonaQA: install the browser on first run, log browser tool calls, keep persona runners black box and make sure they finish.",
   "hooks": {
     "SessionStart": [
       {
@@ -8,6 +8,42 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/setup.mjs\"",
             "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|PowerShell|Read|Write|Edit|MultiEdit|NotebookEdit|Glob|Grep|WebFetch|WebSearch|Agent|mcp__(?!plugin_personaqa_browser__).*)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/guard-runner.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^mcp__plugin_personaqa_browser__.*$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/log-tool.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "persona-runner$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/require-finish.mjs\"",
+            "timeout": 10
           }
         ]
       }
