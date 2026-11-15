@@ -233,3 +233,25 @@ describe('diffLines', () => {
     expect(diffLines(['x'], [])).toEqual(['- x']);
   });
 });
+
+describe('focus visibility', () => {
+  it('says when the focused control has no visible focus indicator', async () => {
+    site.pages.set(
+      '/focus',
+      html(
+        'Focus',
+        '<style>.hidden:focus { outline: none; }</style><a href="/a">Plain</a> <a class="hidden" href="/b">Hidden ring</a>',
+      ),
+    );
+    const { id, look } = await open('/focus');
+    const page = harness.sessions.get(id).page;
+
+    await page.keyboard.press('Tab');
+    expect(await look()).toMatch(/\[e\d+ link "Plain" focused\]/);
+
+    await page.keyboard.press('Tab');
+    expect(await look()).toMatch(
+      /\[e\d+ link "Hidden ring" focused, but nothing on screen shows it\]/,
+    );
+  });
+});

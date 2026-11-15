@@ -11,12 +11,6 @@ import { keyFor, loadTriage } from './triage.mjs';
 
 const SEVERITY_WEIGHT = { critical: 8, high: 5, medium: 3, low: 1 };
 
-/** USD per million tokens. Low assumes nearly all input was cache reads; high assumes none was. */
-const PRICES = {
-  sonnet: { low: 0.1, high: 2.0 },
-  haiku: { low: 0.01, high: 0.1 },
-};
-
 const readJson = (path, fallback) => {
   if (!existsSync(path)) return fallback;
   try {
@@ -109,27 +103,14 @@ export function rankFindings(rawFindings, sessions) {
   return findings.map((finding, position) => ({ ...finding, rank: position + 1, id: `ISSUE-${position + 1}` }));
 }
 
+/**
+ * Claude Code reports a token figure per subagent, but not the split between fresh input, cache reads and output,
+ * so no honest price can be derived from it. Report the tokens and point at the billed figure.
+ */
 export function estimateCost(usage) {
   const total = usage.reduce((sum, entry) => sum + (Number(entry.total_tokens) || 0), 0);
-  if (total === 0) return { tokens: 0, low: null, high: null, label: 'not recorded' };
-
-  let low = 0;
-  let high = 0;
-  let priced = true;
-  for (const entry of usage) {
-    const family = Object.keys(PRICES).find((name) => String(entry.model ?? 'sonnet').toLowerCase().includes(name));
-    if (family === undefined) {
-      priced = false;
-      continue;
-    }
-    const millions = (Number(entry.total_tokens) || 0) / 1_000_000;
-    low += millions * PRICES[family].low;
-    high += millions * PRICES[family].high;
-  }
-
-  const format = (value) => `$${value.toFixed(2)}`;
-  const label = priced ? `${format(low)} to ${format(high)}` : `${total.toLocaleString('en-GB')} tokens`;
-  return { tokens: total, low: priced ? low : null, high: priced ? high : null, label };
+  if (total === 0) return { tokens: 0, label: 'not recorded' };
+  return { tokens: total, label: `${Math.round(total / 1000).toLocaleString('en-GB')}K tokens` };
 }
 
 export function buildData(runDir, loaded) {
@@ -242,7 +223,9 @@ export function summaryMarkdown(data, reportPath) {
 
   lines.push(
     '',
-    `Estimated model cost: ${data.cost.label}${data.cost.tokens > 0 ? ` (${data.cost.tokens.toLocaleString('en-GB')} tokens as reported by Claude Code)` : ''}.`,
+    data.cost.tokens > 0
+      ? `Model usage: ${data.cost.tokens.toLocaleString('en-GB')} tokens reported by Claude Code across the persona runners (not a bill: the billed cost, including inspectors and the coordinator, is in \`claude -p --output-format json\` as \`total_cost_usd\`, or your usage page).`
+      : 'Model usage: not recorded.',
     '',
     `Full report: \`${reportPath}\``,
     '',

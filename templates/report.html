@@ -105,7 +105,7 @@
     [data.sessions.length - counts('success'), 'did not'],
     [data.findings.length, 'findings'],
     [data.findings.filter((finding) => ['critical', 'high'].includes(finding.severity)).length, 'high or critical'],
-    [data.cost.label, 'estimated cost'],
+    [data.cost.label, 'runner tokens'],
   ];
   document.getElementById('tiles').append(...tiles.map(([value, label]) => el('div', { class: 'tile' }, el('div', { class: typeof value === 'number' ? 'value' : 'value text', text: String(value) }), el('div', { class: 'label', text: label }))));
 

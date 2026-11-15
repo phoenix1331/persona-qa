@@ -143,13 +143,13 @@ describe('report.mjs', () => {
     );
     expect(summary).toContain('### Top findings (not yet merged by the coordinator)');
     expect(summary).toContain('| James | checkout | abandoned | 9 | 8.5s |');
-    expect(summary).toContain('Estimated model cost: not recorded.');
+    expect(summary).toContain('Model usage: not recorded.');
     expect(html).not.toContain('{{');
     expect(html).not.toContain('<b>slow</b>');
     expect(html).toContain('data:image/webp;base64,');
   });
 
-  it('estimates cost as a range from recorded tokens', () => {
+  it('reports recorded tokens without inventing a price', () => {
     const runDir = fixture(sessions);
     writeFileSync(
       join(runDir, 'usage.json'),
@@ -162,7 +162,7 @@ describe('report.mjs', () => {
     const { summary } = render(runDir);
 
     expect(summary).toContain(
-      'Estimated model cost: $0.12 to $2.20 (3,000,000 tokens as reported by Claude Code).',
+      'Model usage: 3,000,000 tokens reported by Claude Code across the persona runners (not a bill',
     );
   });
 

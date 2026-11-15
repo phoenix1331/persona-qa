@@ -212,7 +212,13 @@ export function collectSnapshot(input: ScriptInput): ScriptOutput {
       states.push(element.getAttribute('aria-expanded') === 'true' ? 'expanded' : 'collapsed');
     }
     if (element.getAttribute('aria-invalid') === 'true') states.push('invalid');
-    if (element === document.activeElement) states.push('focused');
+    if (element === document.activeElement) {
+      const style = getComputedStyle(element);
+      const outline = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
+      const ring = style.boxShadow !== 'none';
+      // The text view would otherwise reveal focus that a sighted keyboard user cannot see
+      states.push(outline || ring ? 'focused' : 'focused, but nothing on screen shows it');
+    }
 
     const cover = coveredBy(element);
     if (cover !== null) states.push(`covered by "${cover}"`);

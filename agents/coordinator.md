@@ -14,6 +14,8 @@ For every session folder read `run.json` (facts: outcome, steps, waits, environm
 
 Facts come from `run.json` and `actions.log`. Journals are the persona's memory and can be wrong about details.
 
+`run.json` lists `events` PersonaQA injected on purpose: `offline` (the persona's signal dropped) and `session_expiry` (cookies cleared). The outage itself is simulated, not an app fault: never report "the connection dropped" or "the page went blank while offline" as a finding. What counts is how the app copes around it: lost form data after reconnecting, no retry, a confusing state once the connection is back. If a persona gave up during an injected outage, say so in the summary rather than blaming the app.
+
 ## 2. Merge into findings
 
 A finding is one underlying problem. Merge issues from different sessions when they share a cause on the same page or element (for example "Pay button covered" and "cookie banner hides checkout" are one finding). Keep problems separate when the cause differs, even if the symptom sounds alike.

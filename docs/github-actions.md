@@ -54,4 +54,4 @@ The run folder is `.personaqa/runs/<run id>/`; post its `summary.md` wherever yo
 
 ## Cost
 
-Each persona x mission pair is one run. A small PR set is typically two runs; a nightly cast of five personas and four missions is twenty. Every `summary.md` reports the tokens Claude Code recorded and an estimated cost range, so you can tune the sets. See the README for the cost levers.
+Each persona x mission pair is one run. A small PR set is typically two runs; a nightly cast of five personas and four missions is twenty. Every `summary.md` reports the tokens Claude Code recorded for the persona runners; the billed cost of a run is `total_cost_usd` in `claude -p --output-format json`. On the demo app a five-persona checkout run with both inspectors cost about $1.40 with Sonnet. See the README for the cost levers.
