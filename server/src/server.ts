@@ -3,6 +3,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { type ActionResult, KEYS, back, pressKey, scroll, tap, type } from './actions.js';
 import { PersonaQAError } from './errors.js';
+import { evaluate, limitReached, patienceNotice } from './mission.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
 import { takeSnapshot } from './snapshot.js';
@@ -32,7 +33,10 @@ export function createServer(sessions: SessionManager): McpServer {
           mission,
           base_url === undefined ? {} : { baseUrl: base_url },
         );
-        return brief(session);
+        const ended = await evaluate(session, async (outcome, reason) =>
+          sessions.end(session, outcome, reason),
+        );
+        return ended === null ? brief(session) : `${brief(session)}\n\n${ended}`;
       }),
   );
 
@@ -50,6 +54,11 @@ export function createServer(sessions: SessionManager): McpServer {
     async ({ session: id, screenshot }) =>
       respond(async () => {
         const session = sessions.active(id);
+        const limit = limitReached(session);
+        if (limit !== null) {
+          sessions.end(session, 'limit', limit);
+          return `The session has ended: ${limit}. Call finish with your journal.`;
+        }
         return view(session, screenshot === true);
       }),
   );
@@ -60,11 +69,21 @@ export function createServer(sessions: SessionManager): McpServer {
       const result = await action(session);
       session.steps += 1;
       session.lastActionMs = result.durationMs;
+      session.longestWaitMs = Math.max(session.longestWaitMs, result.durationMs);
+
+      const patience = patienceNotice(session, result.durationMs);
+      if (patience !== null) {
+        session.notices.push(patience);
+      }
 
       const seconds = result.durationMs / 1000;
       const waited = seconds >= 1 ? ` The page took ${seconds.toFixed(1)}s to respond.` : '';
       const screen = await view(session, false);
-      return { text: `${result.summary}${waited}\n\n${screen.text}` };
+      const ended = await evaluate(session, async (outcome, reason) =>
+        sessions.end(session, outcome, reason),
+      );
+      const text = `${result.summary}${waited}\n\n${screen.text}`;
+      return { text: ended === null ? text : `${text}\n\n${ended}` };
     });
 
   server.registerTool(
@@ -148,12 +167,16 @@ export function createServer(sessions: SessionManager): McpServer {
     async ({ session: id, journal }) =>
       respond(async () => {
         const session = sessions.get(id);
+        if (session.journal !== undefined) {
+          throw new PersonaQAError(`Session ${id} is already finished.`);
+        }
         session.journal = journal;
-        await sessions.end(
+        sessions.end(
           session,
           session.outcome ?? 'incomplete',
           session.endReason ?? 'finished by persona',
         );
+        await sessions.close(session);
 
         return [
           `Session ${session.id} finished.`,

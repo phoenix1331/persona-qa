@@ -46,6 +46,9 @@ export interface Session {
   cdp: CDPSession;
   random: () => number;
   lastActionMs: number;
+  patienceBreaches: number;
+  /** Longest single wait in the run, for the report. */
+  longestWaitMs: number;
 }
 
 export interface StartOptions {
@@ -107,6 +110,8 @@ export class SessionManager {
       cdp,
       random: seededRandom(id),
       lastActionMs: 0,
+      patienceBreaches: 0,
+      longestWaitMs: 0,
     };
 
     await this.guard(session);
@@ -143,8 +148,8 @@ export class SessionManager {
     return session;
   }
 
-  /** Stops the session for good; tools other than finish refuse it afterwards. */
-  async end(session: Session, outcome: Outcome, reason: string): Promise<void> {
+  /** Stops the session; tools other than finish refuse it afterwards. The browser stays open for evidence until close(). */
+  end(session: Session, outcome: Outcome, reason: string): void {
     if (session.status === 'ended') {
       return;
     }
@@ -152,12 +157,16 @@ export class SessionManager {
     session.status = 'ended';
     session.outcome = outcome;
     session.endReason = reason;
+  }
+
+  async close(session: Session): Promise<void> {
     await session.context.close().catch(() => undefined);
   }
 
   async shutdown(): Promise<void> {
     for (const session of this.sessions.values()) {
-      await this.end(session, session.outcome ?? 'incomplete', 'server shut down');
+      this.end(session, session.outcome ?? 'incomplete', 'server shut down');
+      await this.close(session);
     }
     await this.browser?.close();
     this.browser = undefined;
