@@ -41,6 +41,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install plugin runtime dependencies used by scripts/
+        working-directory: .
+        run: npm ci --omit=dev --ignore-scripts
+
       - name: Install Chromium for browser tests
         run: npx playwright install --with-deps --only-shell chromium
 
