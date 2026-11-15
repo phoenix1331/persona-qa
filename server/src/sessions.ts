@@ -1,7 +1,19 @@
 import { randomBytes } from 'node:crypto';
-import { type Browser, type BrowserContext, type Page, chromium } from 'playwright';
+import {
+  type Browser,
+  type BrowserContext,
+  type CDPSession,
+  type Page,
+  chromium,
+} from 'playwright';
 import { Activity } from './activity.js';
 import { isAllowedUrl } from './domain-guard.js';
+import {
+  type ResolvedEnvironment,
+  applyNetwork,
+  applyTextZoom,
+  resolveEnvironment,
+} from './environment.js';
 import { PersonaQAError } from './errors.js';
 import type { Loader } from './loader.js';
 import type { SnapshotState } from './snapshot.js';
@@ -30,6 +42,8 @@ export interface Session {
   snapshot: SnapshotState;
   activity: Activity;
   touch: boolean;
+  environment: ResolvedEnvironment;
+  cdp: CDPSession;
   random: () => number;
   lastActionMs: number;
 }
@@ -64,9 +78,13 @@ export class SessionManager {
       );
     }
 
+    const environment = resolveEnvironment(persona.environment);
     const browser = await this.ensureBrowser();
-    const context = await browser.newContext();
+    const context = await browser.newContext(environment.contextOptions);
+    await applyTextZoom(context, environment.textZoom);
     const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await applyNetwork(cdp, environment.network);
 
     const id = `${persona.id}--${mission.id}--${randomBytes(2).toString('hex')}`;
     const session: Session = {
@@ -84,7 +102,9 @@ export class SessionManager {
       blockedRequests: [],
       snapshot: { nextRef: 1 },
       activity: new Activity(page),
-      touch: false,
+      touch: environment.input === 'touch',
+      environment,
+      cdp,
       random: seededRandom(id),
       lastActionMs: 0,
     };

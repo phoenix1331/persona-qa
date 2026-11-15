@@ -99,7 +99,16 @@ async function press(session: Session, x: number, y: number): Promise<void> {
   await session.page.mouse.click(x, y);
 }
 
+function refuseWithoutPointer(session: Session): void {
+  if (session.environment.input === 'keyboard_only') {
+    throw new PersonaQAError(
+      'You only use the keyboard: move with Tab and press Enter or Space instead of tapping.',
+    );
+  }
+}
+
 export async function tap(session: Session, ref: string): Promise<ActionResult> {
+  refuseWithoutPointer(session);
   const { locator, x, y } = await target(session, ref);
   const blocker = await interceptor(locator, x, y);
 
@@ -127,6 +136,11 @@ export async function type(
 
   return timed(session, async () => {
     const focused = await locator.evaluate((element) => element === document.activeElement);
+    if (!focused && session.environment.input === 'keyboard_only') {
+      throw new PersonaQAError(
+        `${ref} does not have focus. You only use the keyboard: Tab to it first.`,
+      );
+    }
     if (!focused) {
       await press(session, x, y);
     }

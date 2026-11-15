@@ -206,6 +206,11 @@ export function brief(session: Session): string {
     traits,
     persona.voice === undefined ? '' : `\nVoice: ${persona.voice.trim()}`,
     '',
+    `### Your device\n${session.environment.description}. The browser enforces this; you cannot change it.`,
+    session.environment.input === 'keyboard_only'
+      ? 'You never use a mouse or touch: tap is not available to you. Use press (Tab, Enter, Space, arrows) and type into the focused field.'
+      : '',
+    '',
     '## Your mission',
     mission.goal.trim(),
     mission.context === undefined ? '' : `\n${mission.context.trim()}`,
