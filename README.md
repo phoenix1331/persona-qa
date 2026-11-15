@@ -11,6 +11,8 @@ PersonaQA is a Claude Code plugin that gives your app a cast of simulated users.
 
 **PersonaQA finds the problems. Deterministic tests keep them fixed.**
 
+<p align="center"><img src="docs/media/walkthrough.gif" alt="Margaret, on an iPad with large text, buys a ticket: a cookie banner, a rejected seat, a truncated card number and a hidden £2.50 fee are each recorded as issues" width="720"></p>
+
 ## Results on a demo app
 
 A small ticket shop was built with 15 deliberate flaws (a cookie banner that hides the Pay button on phones, a card field that truncates spaced numbers, a hidden booking fee, a date picker that traps keyboard focus, and so on), with an answer key the agents never see. One `/personaqa:run` of the five built-in personas through checkout:
@@ -22,7 +24,7 @@ A small ticket shop was built with 15 deliberate flaws (a cookie banner that hid
 | Wall time | 4.5 minutes, personas in parallel |
 | Billed cost | $1.40 with Sonnet, including both inspectors and the coordinator |
 
-Margaret's journal from that run:
+Margaret's journal from that run ([the full session](docs/sample-journal.md)):
 
 > The seat page took 18 seconds to load. The first seat I chose, row A seat 1, was said to be unavailable even though the map showed it as available, and I was sent back to the fixtures list. [...] My card number, typed with spaces, was cut off after 16 characters, so I retyped it without spaces. The CVC box has no proper label. The page showed no total before I pressed Pay now. The confirmation then said £29.50 paid, which is £2.50 more than the £27.00 I saw, and I am not happy about that.
 

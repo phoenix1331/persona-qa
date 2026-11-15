@@ -1,0 +1,17 @@
+{
+  "persona": "Margaret, 71",
+  "environment": "iPad · text at 150% · touch",
+  "mission": "Buy one adult ticket for Saturday's match",
+  "frames": [
+    { "shot": "001-a11y-1.jpg", "step": "Start", "caption": "Margaret opens the fixtures page. The browser server has already applied her iPad, touch screen and 150% text.", "seconds": 3 },
+    { "shot": "002-step-1-tap.jpg", "step": "Step 1", "caption": "A cookie banner covers the page. The only way out is a tiny \"ok\" in the corner.", "detail": "tap link \"ok\"", "seconds": 2.5 },
+    { "shot": "003-step-2-tap.jpg", "step": "Step 2", "caption": "She chooses Saturday's match and waits for the seat map.", "detail": "waited 18.5s · her patience: 30s", "seconds": 2.5 },
+    { "shot": "007-issue-1.jpg", "step": "Step 3", "caption": "Seat A1 looks available. It is rejected and she is sent back to the fixtures list.", "issue": "medium", "seconds": 3 },
+    { "shot": "009-step-5-tap.jpg", "step": "Step 5", "caption": "Second try: row B, seat 5. Checkout opens.", "seconds": 2 },
+    { "shot": "014-step-9-type.jpg", "step": "Step 9", "caption": "She types the card number as printed: 4242 4242 4242 4242.", "detail": "type textbox \"Card number\"", "seconds": 2.5 },
+    { "shot": "018-issue-2.jpg", "step": "Step 12", "caption": "The field silently cut it off at 16 characters, and the security code box has no label.", "issue": "medium", "seconds": 3 },
+    { "shot": "019-step-13-tap.jpg", "step": "Step 13", "caption": "Pay now. 7.5 seconds with no sign anything is happening.", "detail": "waited 7.5s", "seconds": 2.5 },
+    { "shot": "021-issue-3.jpg", "step": "Done", "caption": "Order confirmed, but £29.50 was taken for a £27.00 ticket. No fee was shown before paying.", "issue": "high", "seconds": 3.5 },
+    { "outro": true, "title": "Outcome: success", "lines": ["Decided by the server, not the persona", "3 issues with screenshots · 5 accessibility scans", "The full cast found 12 of 15 planted flaws"], "seconds": 4 }
+  ]
+}
