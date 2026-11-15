@@ -11,7 +11,7 @@ PersonaQA is a Claude Code plugin that gives your app a cast of simulated users.
 
 **PersonaQA finds the problems. Deterministic tests keep them fixed.**
 
-<p align="center"><img src="docs/media/walkthrough.gif" alt="Margaret, on an iPad with large text, buys a ticket: a cookie banner, a rejected seat, a truncated card number and a hidden £2.50 fee are each recorded as issues" width="720"></p>
+<p align="center"><img src="docs/media/walkthrough.gif" alt="Chaos, a desktop persona, buys a ticket: a slow seat map, a sold seat that looked available, a truncated card number, a wiped form and a hidden fee are each recorded as issues, then the ranked report is shown" width="760"></p>
 
 ## Results on a demo app
 
@@ -19,14 +19,14 @@ A small ticket shop was built with 15 deliberate flaws (a cookie banner that hid
 
 | Measure | Result |
 |---------|--------|
-| Planted flaws found | **12 of 15** (8 of 9 usability, 4 of 6 accessibility) |
-| Missed | Two flaws on pages the checkout mission never visits; one that led to the invisible-focus fix below |
-| Wall time | 4.5 minutes, personas in parallel |
-| Billed cost | $1.40 with Sonnet, including both inspectors and the coordinator |
+| Planted flaws found | **13 of 15** (8 of 9 usability, 5 of 6 accessibility) |
+| Missed | The two flaws on pages the checkout mission never visits (sign-in and the date filter) |
+| Personas | Five, run in parallel; four reached the goal, Priya (keyboard only, no visible focus) ran out of steps |
+| Billed cost | About $1.50 with Sonnet, including both inspectors and the coordinator |
 
 Margaret's journal from that run ([the full session](docs/sample-journal.md)):
 
-> The seat page took 18 seconds to load. The first seat I chose, row A seat 1, was said to be unavailable even though the map showed it as available, and I was sent back to the fixtures list. [...] My card number, typed with spaces, was cut off after 16 characters, so I retyped it without spaces. The CVC box has no proper label. The page showed no total before I pressed Pay now. The confirmation then said £29.50 paid, which is £2.50 more than the £27.00 I saw, and I am not happy about that.
+> The seat page was slow, 18 seconds the first time. I tapped North Stand row A seat 1 and was sent back to the fixtures list with "Sorry, that seat is no longer available". The taken seats are only a slightly paler green, so I could not tell them apart. [...] The card number with spaces was cut off after "4242 4242 4242 4", so I retyped it without spaces. I pressed Pay now and reached "Order confirmed". It said I had paid £29.50, but I had only ever seen £27.00 and no fee or total before paying. I would want to phone someone about that extra £2.50.
 
 Scoring is deterministic (`scripts/score.mjs` matches findings against the answer key), so model comparisons measure the cast, not the scorer.
 
@@ -115,6 +115,12 @@ Run output lands in `.personaqa/runs/<run id>/`: one folder per persona and miss
 | Chaos | Desktop, session expiry | Emoji, huge inputs, empty fields, double submits, back mid-flow |
 
 Override or extend any of them in `.personaqa/personas/` (`extends: james`), or generate new ones with `/personaqa:persona new`.
+
+## The report
+
+<p align="center"><img src="docs/media/report-findings.jpg" alt="PersonaQA report: ranked findings with severity, personas affected and suggested fixes" width="760"></p>
+
+Every run ends with `summary.md` (for a pull request comment) and a self-contained `report.html`: findings merged across personas and ranked by severity times the number of people affected, the evidence behind each (who, which step, screenshots), each persona's journal, and Accessibility and UX tabs from the inspectors. From there, confirm or dismiss findings (dismissals are remembered), file them as GitHub issues, or turn one into a Playwright test. See [Reading the results](docs/reporting.md) for a tour.
 
 ## In CI
 

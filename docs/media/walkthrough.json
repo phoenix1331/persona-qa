@@ -1,17 +1,18 @@
 {
-  "persona": "Margaret, 71",
-  "environment": "iPad · text at 150% · touch",
+  "persona": "Chaos",
+  "environment": "desktop · edge-case tester",
   "mission": "Buy one adult ticket for Saturday's match",
   "frames": [
-    { "shot": "001-a11y-1.jpg", "step": "Start", "caption": "Margaret opens the fixtures page. The browser server has already applied her iPad, touch screen and 150% text.", "seconds": 3 },
-    { "shot": "002-step-1-tap.jpg", "step": "Step 1", "caption": "A cookie banner covers the page. The only way out is a tiny \"ok\" in the corner.", "detail": "tap link \"ok\"", "seconds": 2.5 },
-    { "shot": "003-step-2-tap.jpg", "step": "Step 2", "caption": "She chooses Saturday's match and waits for the seat map.", "detail": "waited 18.5s · her patience: 30s", "seconds": 2.5 },
-    { "shot": "007-issue-1.jpg", "step": "Step 3", "caption": "Seat A1 looks available. It is rejected and she is sent back to the fixtures list.", "issue": "medium", "seconds": 3 },
-    { "shot": "009-step-5-tap.jpg", "step": "Step 5", "caption": "Second try: row B, seat 5. Checkout opens.", "seconds": 2 },
-    { "shot": "014-step-9-type.jpg", "step": "Step 9", "caption": "She types the card number as printed: 4242 4242 4242 4242.", "detail": "type textbox \"Card number\"", "seconds": 2.5 },
-    { "shot": "018-issue-2.jpg", "step": "Step 12", "caption": "The field silently cut it off at 16 characters, and the security code box has no label.", "issue": "medium", "seconds": 3 },
-    { "shot": "019-step-13-tap.jpg", "step": "Step 13", "caption": "Pay now. 7.5 seconds with no sign anything is happening.", "detail": "waited 7.5s", "seconds": 2.5 },
-    { "shot": "021-issue-3.jpg", "step": "Done", "caption": "Order confirmed, but £29.50 was taken for a £27.00 ticket. No fee was shown before paying.", "issue": "high", "seconds": 3.5 },
-    { "outro": true, "title": "Outcome: success", "lines": ["Decided by the server, not the persona", "3 issues with screenshots · 5 accessibility scans", "The full cast found 12 of 15 planted flaws"], "seconds": 4 }
+    { "shot": "001-a11y-1.jpg", "step": "Start", "caption": "Chaos opens the shop. A cookie banner already covers the bottom of the screen.", "seconds": 3 },
+    { "shot": "002-step-1-tap.jpg", "step": "Step 1", "caption": "Saturday's match. The seat map takes 12.3s to load; her patience is 5s.", "detail": "waited 12.3s", "seconds": 3 },
+    { "shot": "009-issue-1.jpg", "step": "Step 5", "caption": "Seat 6 looks available. It is sold, and she is bounced back to the fixtures list.", "issue": "high", "seconds": 3 },
+    { "shot": "012-step-8-tap.jpg", "step": "Step 8", "caption": "Third try: checkout opens. The order summary says £22.50.", "seconds": 2.5 },
+    { "shot": "024-issue-2.jpg", "step": "Step 16", "caption": "She types the card number with spaces. It is cut at 16 characters: \"That card number is pants\".", "issue": "medium", "seconds": 3.5 },
+    { "shot": "031-issue-3.jpg", "step": "Step 22", "caption": "After the card error the form comes back empty, so the retry fails: \"Hold your horses\".", "issue": "medium", "seconds": 3.5 },
+    { "shot": "039-issue-4.jpg", "step": "Step 28", "caption": "Order confirmed, decided by the browser. But £25.00 was taken for a £22.50 seat.", "issue": "high", "seconds": 3.5 },
+    { "image": "report-findings.jpg", "step": "The report", "label": "report.html", "caption": "The coordinator merges all five personas' issues into ranked findings.", "seconds": 3.5 },
+    { "image": "report-evidence.jpg", "step": "Evidence", "label": "report.html", "caption": "Every finding shows who hit it, at which step, with their screenshots.", "seconds": 3 },
+    { "image": "report-accessibility.jpg", "step": "Accessibility", "label": "report.html", "caption": "Inspectors add WCAG findings, ranked higher when a persona actually suffered.", "seconds": 3 },
+    { "outro": true, "title": "13 of 15 planted flaws found", "lines": ["Five personas, one command, about $1.50", "Success decided by the server, never the persona", "Confirmed findings become Playwright tests"], "seconds": 4 }
   ]
 }
