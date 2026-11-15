@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { Browser, BrowserContext, CDPSession, Page } from 'playwright';
 import { Activity } from './activity.js';
+import type { A11yScan } from './audit.js';
 import { isAllowedUrl } from './domain-guard.js';
 import {
   type ResolvedEnvironment,
@@ -51,6 +52,8 @@ export interface Session {
   issues: Issue[];
   plannedEvents: PlannedEvent[];
   firedEvents: FiredEvent[];
+  a11yScans: A11yScan[];
+  seenStates: Set<string>;
 }
 
 export interface StartOptions {
@@ -127,6 +130,8 @@ export class SessionManager {
       issues: [],
       plannedEvents: [],
       firedEvents: [],
+      a11yScans: [],
+      seenStates: new Set(),
     };
 
     session.plannedEvents = planEvents(session);

@@ -33,6 +33,7 @@ function loadPlaywright() {
   for (const origin of origins) {
     try {
       const require = createRequire(origin);
+      for (const name of Object.keys(runtimeDependencies())) require.resolve(`${name}/package.json`);
       // cli.js is not in the package exports, so locate it from package.json
       return {
         playwright: require('playwright'),
@@ -53,9 +54,9 @@ function chromiumReady(playwright) {
   }
 }
 
-function pinnedVersion() {
+function runtimeDependencies() {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  return manifest.dependencies?.playwright ?? 'latest';
+  return manifest.dependencies ?? { playwright: 'latest' };
 }
 
 function run(command, args, env) {
@@ -66,24 +67,24 @@ function run(command, args, env) {
 }
 
 function install() {
-  writeStatus('installing', 'Installing Playwright and Chromium');
+  writeStatus('installing', 'Installing Playwright, axe-core and Chromium');
   let found = loadPlaywright();
 
   if (found === null) {
     writeFileSync(
       join(data, 'package.json'),
-      `${JSON.stringify({ private: true, dependencies: { playwright: pinnedVersion() } }, null, 2)}\n`,
+      `${JSON.stringify({ private: true, dependencies: runtimeDependencies() }, null, 2)}\n`,
     );
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     if (!run(npm, ['install', '--no-audit', '--no-fund', '--omit=dev'], {})) {
-      writeStatus('failed', 'npm install of Playwright failed');
+      writeStatus('failed', 'npm install of the runtime dependencies failed');
       return;
     }
     found = loadPlaywright();
   }
 
   if (found === null) {
-    writeStatus('failed', 'Playwright could not be loaded after install');
+    writeStatus('failed', 'Runtime dependencies could not be loaded after install');
     return;
   }
 
@@ -92,7 +93,7 @@ function install() {
     return;
   }
 
-  writeStatus('ready', 'Playwright and Chromium are installed');
+  writeStatus('ready', 'Runtime dependencies and Chromium are installed');
 }
 
 if (worker) {
@@ -107,7 +108,7 @@ if (worker) {
 const found = loadPlaywright();
 if (found !== null && chromiumReady(found.playwright)) {
   if (!existsSync(statusFile) || JSON.parse(readFileSync(statusFile, 'utf8')).state !== 'ready') {
-    writeStatus('ready', 'Playwright and Chromium are installed');
+    writeStatus('ready', 'Runtime dependencies and Chromium are installed');
   }
   process.exit(0);
 }
@@ -115,7 +116,7 @@ if (found !== null && chromiumReady(found.playwright)) {
 const locked = existsSync(lockFile) && Date.now() - statSync(lockFile).mtimeMs < LOCK_STALE_MS;
 if (!locked) {
   writeFileSync(lockFile, String(process.pid));
-  writeStatus('installing', 'Installing Playwright and Chromium');
+  writeStatus('installing', 'Installing runtime dependencies and Chromium');
   const child = spawn(process.execPath, [new URL(import.meta.url).pathname, '--worker'], {
     detached: true,
     stdio: 'ignore',

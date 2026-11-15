@@ -35,6 +35,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "ajv": "^8.20.0",
+    "axe-core": "4.14.0",
     "playwright": "^1.65.1",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"

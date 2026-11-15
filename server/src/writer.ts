@@ -99,8 +99,16 @@ export class RunWriter {
       `${JSON.stringify({ session: session.id, persona: session.persona.id, mission: session.mission.id, issues: session.issues }, null, 2)}\n`,
     );
     writeFileSync(join(this.dir, 'run.json'), `${JSON.stringify(runFacts(session), null, 2)}\n`);
+    const a11y = session.config.inspectors.a11y;
+    if (a11y.enabled) {
+      writeFileSync(
+        join(this.dir, 'a11y.json'),
+        `${JSON.stringify({ session: session.id, persona: session.persona.id, mission: session.mission.id, standard: a11y.standard, level: a11y.level, scans: session.a11yScans }, null, 2)}\n`,
+      );
+    }
 
     const files = ['journal.md', 'issues.json', 'run.json', 'actions.log', 'screenshots/'];
+    if (session.config.inspectors.a11y.enabled) files.push('a11y.json');
     if (keepTrace) files.push('trace.zip');
     return files.map((file) => relative(this.projectDir, join(this.dir, file)));
   }

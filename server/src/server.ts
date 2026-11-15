@@ -7,6 +7,7 @@ import { evaluate, limitReached, patienceNotice } from './mission.js';
 import { resolveEnvironment } from './environment.js';
 import { plan } from './plan.js';
 import { beforeAction } from './events.js';
+import { auditState, formatScan, rideAlong } from './audit.js';
 import { recordIssue } from './issues.js';
 import { formatReport, validateProject } from './validate-project.js';
 import { serverInfo } from './server-info.js';
@@ -56,6 +57,24 @@ export function createServer(sessions: SessionManager): McpServer {
   );
 
   server.registerTool(
+    'audit',
+    {
+      title: 'Accessibility scan',
+      description:
+        'For inspectors and sweeps, not personas. Runs an automated axe-core WCAG scan of the current page state and records it in the session a11y.json.',
+      inputSchema: { session: z.string() },
+    },
+    async ({ session: id }) =>
+      respond(async () => {
+        const session = sessions.get(id);
+        if (session.page.isClosed()) {
+          throw new PersonaQAError(`Session ${id} is closed.`);
+        }
+        return formatScan(await auditState(session, true));
+      }),
+  );
+
+  server.registerTool(
     'validate_project',
     {
       title: 'Validate PersonaQA files',
@@ -89,6 +108,7 @@ export function createServer(sessions: SessionManager): McpServer {
           ...(base_url === undefined ? {} : { baseUrl: base_url }),
           ...(run_id === undefined ? {} : { runId: run_id.replaceAll(':', '-') }),
         });
+        await rideAlong(session);
         const ended = await evaluate(session, async (outcome, reason) =>
           sessions.end(session, outcome, reason),
         );
@@ -149,6 +169,7 @@ export function createServer(sessions: SessionManager): McpServer {
       const seconds = result.durationMs / 1000;
       const waited = seconds >= 1 ? ` The page took ${seconds.toFixed(1)}s to respond.` : '';
       const screen = await view(session, false);
+      await rideAlong(session);
       const ended = await evaluate(session, async (outcome, reason) => {
         sessions.end(session, outcome, reason);
         session.writer.log(session, `end ${outcome}: ${reason}`);

@@ -9,31 +9,38 @@ type Playwright = typeof PlaywrightModule;
 
 let cached: Playwright | undefined;
 
-/**
- * Loads Playwright at runtime instead of importing it, so the server can start (and explain what is missing)
- * whether Playwright sits next to the plugin or was installed into the plugin data folder by the setup hook.
- */
-export function playwright(): Playwright {
-  if (cached !== undefined) {
-    return cached;
-  }
-
+function origins(): string[] {
   const dataDir = process.env['PERSONAQA_DATA'];
-  const origins = [import.meta.url];
+  const list = [import.meta.url];
   if (dataDir !== undefined && dataDir !== '') {
-    origins.push(pathToFileURL(join(dataDir, 'node_modules', 'personaqa.js')).href);
+    list.push(pathToFileURL(join(dataDir, 'node_modules', 'personaqa.js')).href);
   }
+  return list;
+}
 
-  for (const origin of origins) {
+/**
+ * Resolves a runtime dependency beside the plugin first, then in the plugin data folder where the setup hook
+ * installs it. Dependencies are never bundled, so the server can start and explain what is missing.
+ */
+export function runtimeResolve(specifier: string): string {
+  for (const origin of origins()) {
     try {
-      cached = createRequire(origin)('playwright') as Playwright;
-      return cached;
+      return createRequire(origin).resolve(specifier);
     } catch {
       // try the next location
     }
   }
 
-  throw new PersonaQAError(setupMessage(dataDir, 'Playwright is not installed yet.'));
+  const name = specifier.split('/')[0] ?? specifier;
+  throw new PersonaQAError(
+    setupMessage(process.env['PERSONAQA_DATA'], `${name} is not installed yet.`),
+  );
+}
+
+/** Loads Playwright through `runtimeResolve`. */
+export function playwright(): Playwright {
+  cached ??= createRequire(import.meta.url)(runtimeResolve('playwright')) as Playwright;
+  return cached;
 }
 
 export function setupMessage(dataDir: string | undefined, fallback: string): string {

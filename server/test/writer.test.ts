@@ -59,6 +59,7 @@ describe('run folder', () => {
     const { dir, finished } = await run('  trace: on_failure\n', 'Finish line');
 
     expect(readdirSync(dir).sort()).toEqual([
+      'a11y.json',
       'actions.log',
       'issues.json',
       'journal.md',
