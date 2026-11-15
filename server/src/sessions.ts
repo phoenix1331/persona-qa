@@ -3,6 +3,7 @@ import { type Browser, type BrowserContext, type Page, chromium } from 'playwrig
 import { isAllowedUrl } from './domain-guard.js';
 import { PersonaQAError } from './errors.js';
 import type { Loader } from './loader.js';
+import type { SnapshotState } from './snapshot.js';
 import type { Config, Mission, Persona } from './types.js';
 
 export type Outcome = 'success' | 'abandoned' | 'limit' | 'incomplete';
@@ -24,6 +25,7 @@ export interface Session {
   /** Messages for the persona, delivered and cleared by the next tool response. */
   notices: string[];
   blockedRequests: string[];
+  snapshot: SnapshotState;
 }
 
 export interface StartOptions {
@@ -73,6 +75,7 @@ export class SessionManager {
       status: 'active',
       notices: [],
       blockedRequests: [],
+      snapshot: { nextRef: 1 },
     };
 
     await this.guard(session);

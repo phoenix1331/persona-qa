@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { PersonaQAError } from './errors.js';
 import { serverInfo } from './server-info.js';
 import type { Session, SessionManager } from './sessions.js';
+import { takeSnapshot } from './snapshot.js';
 
 export function createServer(sessions: SessionManager): McpServer {
   const server = new McpServer(serverInfo, {
@@ -31,6 +32,24 @@ export function createServer(sessions: SessionManager): McpServer {
           base_url === undefined ? {} : { baseUrl: base_url },
         );
         return brief(session);
+      }),
+  );
+
+  server.registerTool(
+    'look',
+    {
+      title: 'Look at the screen',
+      description:
+        'Describes what is on screen now: text, and controls with refs like [e12 button "Pay now"]. Only the visible screen is shown; scroll to see more. If nothing navigated since your last look, only the changes are listed. Ask for a screenshot when layout, colour or images matter.',
+      inputSchema: {
+        session: z.string(),
+        screenshot: z.boolean().optional().describe('Also return an image of the screen'),
+      },
+    },
+    async ({ session: id, screenshot }) =>
+      respond(async () => {
+        const session = sessions.active(id);
+        return view(session, screenshot === true);
       }),
   );
 
@@ -70,9 +89,20 @@ export function createServer(sessions: SessionManager): McpServer {
   return server;
 }
 
-export async function respond(action: () => Promise<string>): Promise<CallToolResult> {
+export interface Reply {
+  text: string;
+  image?: Buffer;
+}
+
+export async function respond(action: () => Promise<string | Reply>): Promise<CallToolResult> {
   try {
-    return { content: [{ type: 'text', text: await action() }] };
+    const result = await action();
+    const reply = typeof result === 'string' ? { text: result } : result;
+    const content: CallToolResult['content'] = [{ type: 'text', text: reply.text }];
+    if (reply.image !== undefined) {
+      content.push({ type: 'image', data: reply.image.toString('base64'), mimeType: 'image/jpeg' });
+    }
+    return { content };
   } catch (error) {
     const message = error instanceof PersonaQAError ? error.describe() : (error as Error).message;
     return { content: [{ type: 'text', text: message }], isError: true };
@@ -107,4 +137,21 @@ export function brief(session: Session): string {
   ]
     .filter((line, index, lines) => !(line === '' && lines[index - 1] === ''))
     .join('\n');
+}
+
+/** How long look waits for a loading page to settle before describing it anyway. */
+const SETTLE_MS = 1500;
+
+/** Notices first (they are what a person would notice first), then the snapshot. */
+export async function view(session: Session, screenshot: boolean): Promise<Reply> {
+  await session.page.waitForLoadState('load', { timeout: SETTLE_MS }).catch(() => undefined);
+  const notices = session.notices.splice(0).map((notice) => `Notice: ${notice}`);
+  const snapshot = await takeSnapshot(session.page, session.snapshot);
+  const text = [...notices, snapshot.text].join('\n');
+
+  if (!screenshot) {
+    return { text };
+  }
+
+  return { text, image: await session.page.screenshot({ type: 'jpeg', quality: 60 }) };
 }
