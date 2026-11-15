@@ -1,0 +1,8 @@
+// PersonaQA colour scheme: the light theme with the logo orange in place of the default purple.
+// The logo orange (#ff6b00) is only 2.9:1 against white, so text uses darker shades of the same hue:
+// links 4.7:1 (WCAG AA for normal text), primary buttons 3.5:1 with bold white text (AA for large text).
+@import "./color_schemes/light";
+
+$personaqa-orange: #ff6b00;
+$link-color: #c25000;
+$btn-primary-color: #e65f00;
