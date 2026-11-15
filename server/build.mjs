@@ -1,0 +1,13 @@
+import { build } from 'esbuild';
+
+await build({
+  entryPoints: ['src/index.ts'],
+  outfile: 'dist/index.js',
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  target: 'node22',
+  sourcemap: true,
+  external: ['playwright', 'playwright-core'],
+  logLevel: 'info',
+});
